@@ -10,6 +10,7 @@ require('mySQLConfig.php');
 <html>
 
 <!-- page header -->
+
 <head>
   <title>Flight Booking</title>
   <link rel="stylesheet" href="style.css">
@@ -17,6 +18,6 @@ require('mySQLConfig.php');
 
 <body>
   <a href="index.php">
-    <h1>Title</h1>
+    <h1>Flight Booking</h1>
   </a>
   <hr>
