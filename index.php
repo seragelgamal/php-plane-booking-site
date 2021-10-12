@@ -17,6 +17,6 @@ $routes = $stmt->fetchAll();
       <p>$<?= $route->price ?></p>
     </div>
   </a>
-<?php } 
+<?php }
 require('templates/footer.php');
 ?>

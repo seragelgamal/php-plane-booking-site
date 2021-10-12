@@ -12,6 +12,9 @@ if (isset($_GET['routeId'])) {
 print_r($routeSchedule);
 
 // form action
+if (isset($_POST['bookButton'])) {
+  header("Location: bookFlight.php?flightId={$_POST[flightId]}");
+}
 
 ?>
 
@@ -26,12 +29,15 @@ print_r($routeSchedule);
     </tr>
     <?php foreach ($routeSchedule as $flight) { ?>
       <tr>
-        <th><?= $flight->date ?></th>
-        <th><?= $flight->time ?></th>
-        <th><?= $flight->capacity - $flight->seats_booked ?></th>
-        <th>
-          <form action="details.php" method="post"><input name="<?= $flight->id ?>" type="submit" value="Book"></form>
-        </th>
+        <td><?= $flight->date ?></td>
+        <td><?= $flight->time ?></td>
+        <td><?= $flight->capacity - $flight->seats_booked ?></td>
+        <td>
+          <form action="details.php" method="post">
+            <input type="submit" name='bookButton' value="Book">
+            <input type="hidden" name="flightId" value="<?= $flight->id ?>">
+          </form>
+        </td>
       </tr>
     <?php } ?>
   </table>
