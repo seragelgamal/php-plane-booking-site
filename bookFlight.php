@@ -23,32 +23,62 @@ $seatsBooked = [];
 foreach ($bookings as $booking) {
   array_push($seatsBooked, $booking->seat_row . $booking->seat_column);
 }
-print_r($seatsBooked);
+// print_r($seatsBooked);
 
 // take out booked seats from the $seats array
 $seats = array_diff($seats, $seatsBooked);
 
 // form action
-// if (isset($_POST['bookButton'])) {
-//   filter_var($_POST)
-// }
+if (isset($_POST['bookButton'])) {
+  $row = $column = $firstName = $lastname = '';
+  $firstNameErrors = $lastNameErrors = [];
+
+  // validate first and last name
+  $firstName = $_POST['firstName'];
+  trim($firstName);
+  if (strlen($firstName > 255)) {
+    array_push($firstNameErrors, 'First name can only be a maximum of 255 characters long');
+  }
+  for ($letter = 0; $letter < strlen($firstName); $letter++) {
+    if (gettype($firstName[$letter]) != 'string') {
+      array_push($firstNameErrors, 'First name can only contain letters');
+    }
+  }
+
+  $lastName = $_POST['lastName'];
+  trim($lastName);
+  if (strlen($lastName > 255)) {
+    array_push($lastNameErrors, 'Last name can only be a maximum of 255 characters long');
+  }
+  for ($letter = 0; $letter < strlen($lastName); $letter++) {
+    if (gettype($lastName[$letter]) != 'string') {
+      array_push($lastNameErrors, 'Last name can only contain letters');
+    }
+  }
+
+  // separate seat row and column
+  // $column = 
+
+  if (sizeof($firstNameErrors) == 0 && sizeof($lastNameErrors) == 0) {
+    ucfirst($firstName);
+    ucfirst($lastName);
+    echo ('form validation success');
+  }
+}
 
 ?>
 
 <div class="seatSelection">
   <p>Select a seat from the following availablities:</p>
-  <form action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>" method="post">
+  <form action="<?= htmlspecialchars("{$_SERVER['PHP_SELF']}?flightId={$_GET['flightId']}") ?>" method="post">
     <select name="row">
       <?php foreach ($seats as $seat) { ?>
         <option value="<?= $seat ?>"><?= $seat ?></option>
       <?php } ?>
     </select>
-    <!-- </div> -->
     <hr>
-    <!-- <div class="personalInfo"> -->
     <p>First name: <input type="text" name="firstName"></p>
     <p>Last name: <input type="text" name="lastName"></p>
-
     <hr>
     <input type="submit" value="Book" name="bookButton">
   </form>

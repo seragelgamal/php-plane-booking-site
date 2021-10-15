@@ -29,6 +29,10 @@ p {
   text-align: center;
 }
 
+div.seatSelection {
+  text-align: left;
+}
+
 /* tr {
   display: block;
   width: 100%;
