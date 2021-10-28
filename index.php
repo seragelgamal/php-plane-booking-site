@@ -1,4 +1,5 @@
 <?php
+
 // require header template
 require('templates/header.php');
 

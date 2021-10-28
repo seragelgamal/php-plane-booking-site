@@ -1,4 +1,5 @@
 <?php
+
 // require header template
 require('templates/header.php');
 
@@ -27,26 +28,24 @@ if (isset($_POST['bookButton'])) {
       <th>Time</th>
       <th>Seats Available</th>
     </tr>
-    <?php foreach ($flights as $flight) { ?>
-      <tr>
-        <td><?= $flight->date ?></td>
-        <td><?= $flight->time ?></td>
-        <td><?= $flight->capacity - $flight->seats_booked ?></td>
-        <td>
-          <form action="details.php" method="post">
-            <input type="submit" name='bookButton' value="Book">
-            <input type="hidden" name="flightId" value="<?= $flight->id ?>">
-          </form>
-        </td>
-      </tr>
-    <?php } ?>
+    <?php foreach ($flights as $flight) {
+      if ($flight->capacity - $flight->seats_booked > 0) { ?>
+        <tr>
+          <td><?= $flight->date ?></td>
+          <td><?= $flight->time ?></td>
+          <td><?= $flight->capacity - $flight->seats_booked ?></td>
+          <td>
+            <form action="details.php" method="post">
+              <input type="submit" name='bookButton' value="Book">
+              <input type="hidden" name="flightId" value="<?= $flight->id ?>">
+            </form>
+          </td>
+        </tr>
+    <?php }
+    } ?>
   </table>
 <?php } else { ?>
   <h3>No flights available at the moment for this route</h3>
 <?php } ?>
-
-
-
-
 
 <?php require('templates/footer.php'); ?>
