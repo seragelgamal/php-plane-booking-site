@@ -34,7 +34,7 @@ if (isset($_POST['bookButton'])) {
 
   // validate last name
   $lastName = $_POST['lastName'];
-  
+
   // make sure last name isn't blank
   if ($lastName == '') {
     array_push($lastNameErrors, 'Last name is required');
@@ -65,6 +65,9 @@ if (isset($_POST['bookButton'])) {
     // update seats booked in database
     $stmt = $pdo->prepare('UPDATE flights SET seats_booked = seats_booked + 1 WHERE id = :flightId');
     $stmt->execute(['flightId' => $_GET['flightId']]);
+
+    // redirect to thank-you page
+    header('Location: thanks.php');
   }
 }
 
@@ -102,11 +105,15 @@ $seats = array_diff($seats, $seatsBooked);
       <?php } ?>
     </select>
     <hr>
-    <p>First name: <input type="text" name="firstName"></p>
+    <p>First name: <input type="text" name="firstName" value='<?php if (isset($_POST['firstName'])) {
+                                                                echo ($_POST['firstName']);
+                                                              } ?>'></p>
     <p><?php foreach ($firstNameErrors as $error) {
           echo ("$error <br>");
         } ?></p>
-    <p>Last name: <input type="text" name="lastName"></p>
+    <p>Last name: <input type="text" name="lastName" value='<?php if (isset($_POST['lastName'])) {
+                                                              echo ($_POST['lastName']);
+                                                            } ?>'></p>
     <p><?php foreach ($lastNameErrors as $error) {
           echo ("$error <br>");
         } ?></p>

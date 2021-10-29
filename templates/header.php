@@ -3,7 +3,6 @@
 // require mySQL config template
 require('mySQLConfig.php');
 
-
 ?>
 
 <!DOCTYPE html>

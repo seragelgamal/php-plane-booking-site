@@ -33,6 +33,10 @@ div.seatSelection {
   text-align: left;
 }
 
+.thankYouMessage {
+  margin: auto;
+}
+
 /* tr {
   display: block;
   width: 100%;

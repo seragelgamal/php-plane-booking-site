@@ -3,14 +3,18 @@
 // require header template
 require('templates/header.php');
 
-// get schedule for route clicked
+// get schedule for route clicked and record origin and destination
 if (isset($_GET['routeId'])) {
   $stmt = $pdo->query("SELECT * FROM flights WHERE route_id = {$_GET['routeId']} && capacity - seats_booked > 0");
   $flights = $stmt->fetchAll();
+
+  $stmt = $pdo->query("SELECT * FROM routes WHERE id = {$_GET['routeId']}");
+  $route = $stmt->fetch();
 } else {
+  // if no route is selected, red
 }
 
-print_r($flights);
+print_r($route);
 
 // form action
 if (isset($_POST['bookButton'])) {
@@ -19,7 +23,9 @@ if (isset($_POST['bookButton'])) {
 
 ?>
 
-<h2><?= $_GET['origin'] ?> - <?= $_GET['destination'] ?></h2>
+<?php if (isset($route->origin) && isset($route->destination)) { ?>
+  <h2><?= $route->origin ?> to <?= $route->destination ?></h2>
+<?php } ?>
 <?php if (sizeof($flights) > 0) { ?>
   <h3 class="scheduleHeading">Schedule:</h3>
   <table>
@@ -45,7 +51,8 @@ if (isset($_POST['bookButton'])) {
     } ?>
   </table>
 <?php } else { ?>
-  <h3>No flights available at the moment for this route</h3>
+  <h3>Error: the requested flight was not found</h3>
+  <a href="index.php"><button>Return to homepage</button></a>
 <?php } ?>
 
 <?php require('templates/footer.php'); ?>
