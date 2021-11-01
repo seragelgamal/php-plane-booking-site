@@ -4,17 +4,16 @@
 require('templates/header.php');
 
 // get schedule for route clicked and record origin and destination
-if (isset($_GET['routeId'])) {
+if (isset($_GET['routeId']) && $_GET['routeId'] != '') {
   $stmt = $pdo->query("SELECT * FROM flights WHERE route_id = {$_GET['routeId']} && capacity - seats_booked > 0");
   $flights = $stmt->fetchAll();
 
   $stmt = $pdo->query("SELECT * FROM routes WHERE id = {$_GET['routeId']}");
   $route = $stmt->fetch();
 } else {
-  // if no route is selected, red
+  // if no route is selected, redirect to home page
+  header('Location: index.php');
 }
-
-print_r($route);
 
 // form action
 if (isset($_POST['bookButton'])) {
@@ -51,7 +50,7 @@ if (isset($_POST['bookButton'])) {
     } ?>
   </table>
 <?php } else { ?>
-  <h3>Error: the requested flight was not found</h3>
+  <h3>Error: the requested flight was not found in the database</h3>
   <a href="index.php"><button>Return to homepage</button></a>
 <?php } ?>
 
