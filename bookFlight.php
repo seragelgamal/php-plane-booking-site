@@ -3,6 +3,13 @@
 // require header template
 require('templates/header.php');
 
+// make sure that the given id is actually a real id of a flight
+$stmt = $pdo->prepare('SELECT * FROM flights WHERE id=:flightId');
+$stmt->execute(['flightId' => $_GET['flightId']]);
+if ($stmt->rowCount() == 0) {
+  header('Location: index.php');
+}
+
 // set global form variables
 $seat = $row = $column = $firstName = $lastname = '';
 $firstNameErrors = $lastNameErrors = [];
@@ -58,8 +65,7 @@ if (isset($_POST['bookButton'])) {
     $lastName = trim($lastName);
     $lastName = ucfirst($lastName);
 
-    // push name and seat to server
-    $stmt = $pdo->prepare('INSERT INTO flight_bookings (first_name, last_name, flight_id, seat_row, seat_column) VALUES (:firstName, :lastName, :flightId, :seatRow, :seatColumn)');
+    // push name and seat to server$stmt = $pdo->prepare('INSERT INTO flight_bookings (first_name, last_name, flight_id, seat_row, seat_column) VALUES (:firstName, :lastName, :flightId, :seatRow, :seatColumn)');
     $stmt->execute(['firstName' => $firstName, 'lastName' => $lastName, 'flightId' => $_GET['flightId'], 'seatRow' => $row, 'seatColumn' => $column]);
 
     // update seats booked in database
@@ -71,8 +77,12 @@ if (isset($_POST['bookButton'])) {
   }
 }
 
-// get seats available for flight selected
+// get seat layout for flight selected, as well as booked seats
 if (isset($_GET['flightId'])) {
+  $stmt = $pdo->query("SELECT number_of_rows, number_of_columns FROM flights WHERE id = {$_GET['flightId']}");
+  $rows = $stmt->fetch()->number_of_rows;
+  // print_r($rows);
+
   $stmt = $pdo->query("SELECT * FROM flight_bookings WHERE flight_id = {$_GET['flightId']}");
   $bookings = $stmt->fetchAll();
 }
@@ -108,15 +118,15 @@ $seats = array_diff($seats, $seatsBooked);
     <p>First name: <input type="text" name="firstName" value='<?php if (isset($_POST['firstName'])) {
                                                                 echo ($_POST['firstName']);
                                                               } ?>'></p>
-    <p><?php foreach ($firstNameErrors as $error) {
-          echo ("$error <br>");
-        } ?></p>
+    <p class="errors"><?php foreach ($firstNameErrors as $error) {
+                        echo ("$error <br>");
+                      } ?></p>
     <p>Last name: <input type="text" name="lastName" value='<?php if (isset($_POST['lastName'])) {
                                                               echo ($_POST['lastName']);
                                                             } ?>'></p>
-    <p><?php foreach ($lastNameErrors as $error) {
-          echo ("$error <br>");
-        } ?></p>
+    <p class="errors"><?php foreach ($lastNameErrors as $error) {
+                        echo ("$error <br>");
+                      } ?></p>
     <hr>
     <input type="submit" value="Book" name="bookButton">
   </form>

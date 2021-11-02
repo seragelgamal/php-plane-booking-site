@@ -49,6 +49,7 @@ if (isset($_POST['submit'])) {
 
 <!-- search section -->
 <h2>Search flights by origin and destination:</h2>
+<p>
 <form action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>" method="post">
   <select name="origin">
     <option value="">All origins</option>
@@ -65,6 +66,8 @@ if (isset($_POST['submit'])) {
   </select>
   <input type="submit" value="Search" name="submit">
 </form>
+</p>
+
 
 <hr>
 

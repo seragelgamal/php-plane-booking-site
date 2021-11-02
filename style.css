@@ -37,6 +37,10 @@ div.seatSelection {
   margin: auto;
 }
 
+.errors {
+  color: red;
+}
+
 /* tr {
   display: block;
   width: 100%;
