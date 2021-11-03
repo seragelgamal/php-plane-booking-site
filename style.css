@@ -45,3 +45,11 @@ div.seatSelection {
   display: block;
   width: 100%;
 } */
+
+.seatSelection {
+  margin: auto;
+}
+
+input:disabled {
+  border: 1px solid grey;
+}
