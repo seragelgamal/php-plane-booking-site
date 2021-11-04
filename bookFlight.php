@@ -19,43 +19,35 @@ $availabilityInfo = '';
 if (isset($_POST['bookButton'])) {
   // make sure a seat is selected
   if (!isset($_POST['seat'])) {
-    // if a seat isnt selected: push seat error
     array_push($seatErrors, 'Seat selection is required');
   } else {
-    
+    // separate seat row and column and store them
+    $seat = strlen($_POST['seat']) > 2 ? chunk_split($_POST['seat'], 2, ' ') : chunk_split($_POST['seat'], 1, ' ');
+    $row = strtok($seat, ' ');
+    $column = strtok(' ');
   }
 
-  // separate seat row and column and store them
-  $seat = strlen($_POST['seat']) > 2 ? chunk_split($_POST['seat'], 2, ' ') : chunk_split($_POST['seat'], 1, ' ');
-  $row = strtok($seat, ' ');
-  $column = strtok(' ');
-
-  // validate first name
+  // store first name
   $firstName = $_POST['firstName'];
-
-  // make sure first name isn't blank
+  // make sure first name's not blank
   if ($firstName == '') {
     array_push($firstNameErrors, 'First name is required');
   }
-
-  // make sure first name is only letters
+  // make sure first name's only letters
   if (preg_match('~[0-9]~', $firstName)) {
     array_push($firstNameErrors, 'First name can only contain letters');
   }
-
   // make sure first name isn't longer than 255 characters
   if (strlen($firstName) > 255) {
     array_push($firstNameErrors, 'First name can only be a maximum of 255 characters long');
   }
 
-  // validate last name
+  // store last name
   $lastName = $_POST['lastName'];
-
   // make sure last name isn't blank
   if ($lastName == '') {
     array_push($lastNameErrors, 'Last name is required');
   }
-
   // make sure last name is only letters
   if (preg_match('~[0-9]~', $lastName)) {
     array_push($lastNameErrors, 'Last name can only contain letters');
@@ -66,7 +58,9 @@ if (isset($_POST['bookButton'])) {
     array_push($lastNameErrors, 'Last name can only be a maximum of 255 characters long');
   }
 
-  if (sizeof($firstNameErrors) == 0 && sizeof($lastNameErrors) == 0) {
+  // if there's no errors: begin process to register the booking
+  if (sizeof($seatErrors) == 0 && sizeof($firstNameErrors) == 0 && sizeof($lastNameErrors) == 0) {
+
     // format first and last name
     $firstName = trim($firstName);
     $firstName = ucfirst($firstName);
@@ -94,10 +88,7 @@ if (isset($_GET['flightId'])) {
 
   $stmt = $pdo->query("SELECT * FROM flight_bookings WHERE flight_id = {$_GET['flightId']}");
   $bookings = $stmt->fetchAll();
-  // print_r($bookings);
 }
-// print_r($availabilityInfo);
-// print_r($availabilityInfo->seats_booked);
 
 // set global array '$seats' to store all possible seats
 $columnLegend = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K'];
@@ -124,19 +115,18 @@ $seats = array_diff($seats, $seatsBooked);
                       echo ("$error <br>");
                     } ?></p>
   <form action="<?= htmlspecialchars("{$_SERVER['PHP_SELF']}?flightId={$_GET['flightId']}") ?>" method="post">
-    <!-- <select name="seat">
-      <?php foreach ($seats as $seat) { ?>
-        <option value="<?= $seat ?>" <?php if ($seat == "$row$column") { ?> selected <?php } ?>><?= $seat ?></option>
-      <?php } ?>
-    </select> -->
     <?php for ($r = 1; $r < ($availabilityInfo->number_of_rows + 1); $r++) { ?>
-      <div class="seatSelection">
-        <p><?= $r ?></p>
-        <?php for ($c = 0; $c < ($availabilityInfo->number_of_columns); $c++) { ?>
-          <input type="radio" name="seat" value="<?= "$r{$columnLegend[$c]}" ?>" <?php foreach ($bookings as $booking) {
-                                                                                    if ("$r{$columnLegend[$c]}" == "{$booking->seat_row}{$booking->seat_column}") { ?> disabled <?php }
-                                                                                                                                                                            } ?>><?= $columnLegend[$c] ?>
-        <?php } ?>
+      <p><?= $r ?></p>
+      <div class="seatRow">
+        <div class="seatColumn">
+          <?php for ($c = 0; $c < ($availabilityInfo->number_of_columns); $c++) { ?>
+            <input type="radio" name="seat" value="<?= "$r{$columnLegend[$c]}" ?>" <?php foreach ($bookings as $booking) {
+                                                                                      if ("$r{$columnLegend[$c]}" == "{$booking->seat_row}{$booking->seat_column}") { ?> disabled <?php }
+                                                                                                                                                                            }
+                                                                                                                                                                            if ("$r{$columnLegend[$c]}" == "$row$column") { ?> checked <?php } ?>><?= $columnLegend[$c] ?>
+          <?php } ?>
+        </div>
+
       </div>
     <?php } ?>
     <hr>

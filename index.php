@@ -53,16 +53,24 @@ if (isset($_POST['submit'])) {
 <form action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>" method="post">
   <select name="origin">
     <option value="">All origins</option>
-    <?php foreach ($routes as $route) { ?>
-      <option <?php if (isset($_POST['origin']) && $_POST['origin'] == $route->origin) { ?> selected <?php } ?>><?= $route->origin ?></option>
-    <?php } ?>
+    <?php $origins = [];
+    foreach ($routes as $route) {
+      if (!array_search($route->origin, $origins)) {
+        array_push($origins, $route->origin); ?>
+        <option <?php if (isset($_POST['origin']) && $_POST['origin'] == $route->origin) { ?> selected <?php } ?>><?= $route->origin ?></option>
+    <?php }
+    } ?>
   </select>
   to
   <select name="destination">
     <option value="">All destinations</option>
-    <?php foreach ($routes as $route) { ?>
-      <option <?php if (isset($_POST['destination']) && $_POST['destination'] == $route->destination) { ?> selected <?php } ?>><?= $route->destination ?></option>
-    <?php } ?>
+    <?php $destinations = [];
+    foreach ($routes as $route) {
+      if (!array_search($route->destination, $destinations)) {
+        array_push($destinations, $route->destination); ?>
+        <option <?php if (isset($_POST['destination']) && $_POST['destination'] == $route->destination) { ?> selected <?php } ?>><?= $route->destination ?></option>
+    <?php }
+    } ?>
   </select>
   <input type="submit" value="Search" name="submit">
 </form>
@@ -82,7 +90,11 @@ if (isset($_POST['submit'])) {
       </div>
     </a>
   <?php }
-} else { ?>
-  <h2>No available flights for the selected origin and destination. Try changing your search</h2>
+} else {
+  if ($_POST['origin'] == $_POST['destination']) { ?>
+    <h2>Please select different cities for the origin and destination.</h2>
+  <?php } else { ?>
+    <h2>No flights found from <?= $_POST['origin'] ?> to <?= $_POST['destination'] ?>. Try changing your search</h2>
+  <?php } ?>
 <?php }
 require('templates/footer.php'); ?>

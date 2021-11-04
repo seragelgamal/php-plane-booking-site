@@ -46,9 +46,15 @@ div.seatSelection {
   width: 100%;
 } */
 
-.seatSelection {
-  margin: auto;
-}
+/* .seatRow {
+  display: flex;
+  flex-direction: row;
+} */
+
+/* .seatColumn {
+  display: flex;
+  flex-direction: column;
+} */
 
 input:disabled {
   border: 1px solid grey;
