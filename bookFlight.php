@@ -122,8 +122,8 @@ $seats = array_diff($seats, $seatsBooked);
           <?php for ($c = 0; $c < ($availabilityInfo->number_of_columns); $c++) { ?>
             <input type="radio" name="seat" value="<?= "$r{$columnLegend[$c]}" ?>" <?php foreach ($bookings as $booking) {
                                                                                       if ("$r{$columnLegend[$c]}" == "{$booking->seat_row}{$booking->seat_column}") { ?> disabled <?php }
-                                                                                                                                                                            }
-                                                                                                                                                                            if ("$r{$columnLegend[$c]}" == "$row$column") { ?> checked <?php } ?>><?= $columnLegend[$c] ?>
+                                                                                                                                                                              }
+                                                                                                                                                                              if ("$r{$columnLegend[$c]}" == "$row$column") { ?> checked <?php } ?>><?= $columnLegend[$c] ?>
           <?php } ?>
         </div>
 

@@ -45,6 +45,8 @@ if (isset($_POST['submit'])) {
   }
 }
 
+// in_array()
+
 ?>
 
 <!-- search section -->
@@ -55,7 +57,7 @@ if (isset($_POST['submit'])) {
     <option value="">All origins</option>
     <?php $origins = [];
     foreach ($routes as $route) {
-      if (!array_search($route->origin, $origins)) {
+      if (!in_array($route->origin, $origins)) {
         array_push($origins, $route->origin); ?>
         <option <?php if (isset($_POST['origin']) && $_POST['origin'] == $route->origin) { ?> selected <?php } ?>><?= $route->origin ?></option>
     <?php }
@@ -66,7 +68,7 @@ if (isset($_POST['submit'])) {
     <option value="">All destinations</option>
     <?php $destinations = [];
     foreach ($routes as $route) {
-      if (!array_search($route->destination, $destinations)) {
+      if (!in_array($route->destination, $destinations)) {
         array_push($destinations, $route->destination); ?>
         <option <?php if (isset($_POST['destination']) && $_POST['destination'] == $route->destination) { ?> selected <?php } ?>><?= $route->destination ?></option>
     <?php }

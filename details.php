@@ -3,7 +3,7 @@
 // require header template
 require('templates/header.php');
 
-// get schedule for route clicked and record origin and destination
+// get schedule for route clicked and get origin and destination
 if (isset($_GET['routeId']) && $_GET['routeId'] != '') {
   $stmt = $pdo->query("SELECT * FROM flights WHERE route_id = {$_GET['routeId']} && capacity - seats_booked > 0");
   $flights = $stmt->fetchAll();
@@ -15,8 +15,9 @@ if (isset($_GET['routeId']) && $_GET['routeId'] != '') {
   header('Location: index.php');
 }
 
-// form action
+// form action:
 if (isset($_POST['bookButton'])) {
+  // redirect to booking page along with flight id for selected flight
   header("Location: bookFlight.php?flightId={$_POST['flightId']}");
 }
 

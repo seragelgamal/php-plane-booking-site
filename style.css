@@ -59,3 +59,13 @@ div.seatSelection {
 input:disabled {
   border: 1px solid grey;
 }
+
+table {
+  border-collapse: collapse;
+  text-align: center;
+}
+
+td, th {
+  padding: 5px;
+  border: 1px solid black;
+}
