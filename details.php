@@ -17,7 +17,7 @@ if (isset($_GET['routeId']) && $_GET['routeId'] != '') {
 
 // form action:
 if (isset($_POST['bookButton'])) {
-  // redirect to booking page along with flight id for selected flight
+  // redirect to booking page, sending along flight id for selected flight
   header("Location: bookFlight.php?flightId={$_POST['flightId']}");
 }
 

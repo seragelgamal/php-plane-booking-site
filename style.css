@@ -24,7 +24,7 @@ div.flight:hover {
   background-color: rgb(209, 209, 209);
 }
 
-p {
+p.routePrice {
   margin-bottom: 5px;
   text-align: center;
 }
