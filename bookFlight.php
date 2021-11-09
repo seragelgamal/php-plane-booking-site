@@ -7,18 +7,35 @@ require('templates/header.php');
 $stmt = $pdo->prepare('SELECT * FROM flights WHERE id=:flightId');
 $stmt->execute(['flightId' => $_GET['flightId']]);
 if ($stmt->rowCount() == 0) {
+  // if flight id is unknown, redirect to home page
   header('Location: index.php');
 }
 
 // set global form and seat info variables
-$seat = $row = $column = $firstName = $lastName = '';
+$seat = $row = $column = $firstName = $lastName = $availabilityInfo = '';
 $seatErrors = $firstNameErrors = $lastNameErrors = [];
-$availabilityInfo = '';
+
+// FUNCTIONS:
+function validateName(string $nameVariable, string $formValue, array &$errorArray) {
+  // make sure first name's not blank
+  if ($nameVariable == '') {
+    array_push($errorArray, 'First name is required');
+  }
+  // make sure first name's only letters
+  if (preg_match('~[0-9]~', $nameVariable)) {
+    array_push($errorArray, 'First name can only contain letters');
+  }
+  // make sure first name isn't longer than 255 characters
+  if (strlen($nameVariable) > 255) {
+    array_push($errorArray, 'First name can only be a maximum of 255 characters long');
+  }
+}
 
 // form action
 if (isset($_POST['bookButton'])) {
   // make sure a seat is selected
   if (!isset($_POST['seat'])) {
+    // if seat isn't selected: push seat selection requirement notice
     array_push($seatErrors, 'Seat selection is required');
   } else {
     // separate seat row and column and store them
@@ -126,19 +143,14 @@ $seats = array_diff($seats, $seatsBooked);
                                                                                                                                                                               if ("$r{$columnLegend[$c]}" == "$row$column") { ?> checked <?php } ?>><?= $columnLegend[$c] ?>
           <?php } ?>
         </div>
-
       </div>
     <?php } ?>
     <hr>
-    <p>First name: <input type="text" name="firstName" value='<?php if (isset($_POST['firstName'])) {
-                                                                echo ($_POST['firstName']);
-                                                              } ?>'></p>
+    <p>First name: <input type="text" name="firstName" <?php if (isset($_POST['firstName'])) { ?> value="<?= $_POST['firstName'] ?>" <?php } ?>></p>
     <p class="errors"><?php foreach ($firstNameErrors as $error) {
                         echo ("$error <br>");
                       } ?></p>
-    <p>Last name: <input type="text" name="lastName" value='<?php if (isset($_POST['lastName'])) {
-                                                              echo ($_POST['lastName']);
-                                                            } ?>'></p>
+    <p>Last name: <input type="text" name="lastName" <?php if (isset($_POST['lastName'])) { ?> value="<?= $_POST['lastName'] ?>" <?php } ?>></p>
     <p class="errors"><?php foreach ($lastNameErrors as $error) {
                         echo ("$error <br>");
                       } ?></p>

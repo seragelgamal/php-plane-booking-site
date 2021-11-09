@@ -10,6 +10,21 @@ $routes = $stmt->fetchAll();
 // set global variable for relevant routes based on search
 $searchedRoutes = [];
 
+// FUNCTIONS:
+// origin/destination filter function: pushes values from array of all routes that match with the specified location filter (either 'origin' or 'destination')
+function originDestinationFilter($totalRouteArray, $filterLocation, $formValue, &$filteredRouteArray) {
+  foreach ($totalRouteArray as $route) {
+    if ($route->$filterLocation == $formValue) {
+      array_push($filteredRouteArray, $route);
+    }
+  }
+}
+// price filter function: takes value with specified index out of the specified array and re-keys the array
+function priceFilter(array &$array, $i) {
+  unset($array[$i]);
+  $array = array_values($array);
+}
+
 // form action: get available flights based on specified filters
 if (isset($_POST['submit'])) {
   if ($_POST['origin'] != '' && $_POST['destination'] != '') {
@@ -21,42 +36,30 @@ if (isset($_POST['submit'])) {
     }
   } else if ($_POST['origin'] != '') {
     // if only origin is set
-    foreach ($routes as $route) {
-      if ($route->origin == $_POST['origin']) {
-        array_push($searchedRoutes, $route);
-      }
-    }
+    originDestinationFilter($routes, 'origin', $_POST['origin'], $searchedRoutes);
   } else if ($_POST['destination'] != '') {
     // if only destination is set
-    foreach ($routes as $route) {
-      if ($route->destination == $_POST['destination']) {
-        array_push($searchedRoutes, $route);
-      }
-    }
+    originDestinationFilter($routes, 'destination', $_POST['destination'], $searchedRoutes);
   } else {
     // neither are set
     foreach ($routes as $route) {
       array_push($searchedRoutes, $route);
     }
   }
-
   if ($_POST['minimumPrice'] != '') {
     // if min price is set
     for ($i = 0; $i < sizeof($searchedRoutes); $i++) {
       if ($searchedRoutes[$i]->price < $_POST['minimumPrice']) {
-        unset($searchedRoutes[$i]);
-        $searchedRoutes = array_values($searchedRoutes);
+        priceFilter($searchedRoutes, $i);
         $i--;
       }
     }
   }
-
-  // if max price is set
   if ($_POST['maximumPrice'] != '') {
+    // if max price is set
     for ($i = 0; $i < sizeof($searchedRoutes); $i++) {
       if ($searchedRoutes[$i]->price > $_POST['maximumPrice']) {
-        unset($searchedRoutes[$i]);
-        $searchedRoutes = array_values($searchedRoutes);
+        priceFilter($searchedRoutes, $i);
         $i--;
       }
     }
@@ -112,7 +115,7 @@ if (isset($_POST['submit'])) {
 <!-- display section -->
 <?php if (sizeof($searchedRoutes) > 0) { ?>
   <h2>Flights:</h2>
-  <p>(<?= sizeof($searchedRoutes) ?> flights out of <?= sizeof($routes) ?> total)</p>
+  <p>(showing <?= sizeof($searchedRoutes) ?> flights out of <?= sizeof($routes) ?> total)</p>
   <?php foreach ($searchedRoutes as $route) { ?>
     <a href="details.php?routeId=<?= $route->id ?>">
       <div class="flight">
