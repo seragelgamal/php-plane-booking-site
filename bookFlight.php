@@ -16,19 +16,47 @@ $seat = $row = $column = $firstName = $lastName = $availabilityInfo = '';
 $seatErrors = $firstNameErrors = $lastNameErrors = [];
 
 // FUNCTIONS:
-function validateName(string $nameVariable, string $formValue, array &$errorArray) {
-  // make sure first name's not blank
+// returns an array of the errors for a user-entered name
+function errorArray(string $nameVariable, string $fieldName) {
+  $errorArray = [];
+
+  // make sure name's not blank
   if ($nameVariable == '') {
-    array_push($errorArray, 'First name is required');
+    array_push($errorArray, "$fieldName is required");
   }
-  // make sure first name's only letters
+  // make sure name's only letters
   if (preg_match('~[0-9]~', $nameVariable)) {
-    array_push($errorArray, 'First name can only contain letters');
+    array_push($errorArray, "$fieldName can only contain letters");
   }
-  // make sure first name isn't longer than 255 characters
+  // make sure name isn't longer than 255 characters
   if (strlen($nameVariable) > 255) {
-    array_push($errorArray, 'First name can only be a maximum of 255 characters long');
+    array_push($errorArray, "$fieldName can only be a maximum of 255 characters long");
   }
+
+  return $errorArray;
+}
+
+// returns the formatted version of a user-entered name
+function formatName(string $nameVariable) {
+  // take out spaces from the start and end of the name if they exist
+  $nameVariable = trim($nameVariable);
+  // convert all letters to lower case
+  $nameVariable = strtolower($nameVariable);
+  // set first letter to uppercase
+  $nameVariable = ucfirst($nameVariable);
+
+  return $nameVariable;
+}
+
+function echoErrors(array $errorArray) { ?>
+  <p class="errors"><?php foreach ($errorArray as $error) {
+                      echo ("$error <br>");
+                    } ?></p>
+<?php }
+
+function echoNameField(string $userFieldName, string $POSTfieldName, array $errorArray) { ?>
+  <p><?= $userFieldName ?>: <input type="text" name="<?= $POSTfieldName ?>" <?php if (isset($_POST[$POSTfieldName])) { ?> value="<?= $_POST[$POSTfieldName] ?>" <?php } ?>></p>
+  <?php echoErrors($errorArray);
 }
 
 // form action
@@ -46,44 +74,19 @@ if (isset($_POST['bookButton'])) {
 
   // store first name
   $firstName = $_POST['firstName'];
-  // make sure first name's not blank
-  if ($firstName == '') {
-    array_push($firstNameErrors, 'First name is required');
-  }
-  // make sure first name's only letters
-  if (preg_match('~[0-9]~', $firstName)) {
-    array_push($firstNameErrors, 'First name can only contain letters');
-  }
-  // make sure first name isn't longer than 255 characters
-  if (strlen($firstName) > 255) {
-    array_push($firstNameErrors, 'First name can only be a maximum of 255 characters long');
-  }
+  // push first name errors to error array
+  $firstNameErrors = errorArray($firstName, 'First name');
 
   // store last name
   $lastName = $_POST['lastName'];
-  // make sure last name isn't blank
-  if ($lastName == '') {
-    array_push($lastNameErrors, 'Last name is required');
-  }
-  // make sure last name is only letters
-  if (preg_match('~[0-9]~', $lastName)) {
-    array_push($lastNameErrors, 'Last name can only contain letters');
-  }
-
-  // make sure last name isn't longer than 255 characters
-  if (strlen($lastName) > 255) {
-    array_push($lastNameErrors, 'Last name can only be a maximum of 255 characters long');
-  }
+  // push last name errors to last name error array
+  $lastNameErrors = errorArray($lastName, 'Last name');
 
   // if there's no errors: begin process to register the booking
   if (sizeof($seatErrors) == 0 && sizeof($firstNameErrors) == 0 && sizeof($lastNameErrors) == 0) {
-
     // format first and last name
-    $firstName = trim($firstName);
-    $firstName = ucfirst($firstName);
-
-    $lastName = trim($lastName);
-    $lastName = ucfirst($lastName);
+    $firstName = formatName($firstName);
+    $lastName = formatName($lastName);
 
     // push name and seat to server
     $stmt = $pdo->prepare('INSERT INTO flight_bookings (first_name, last_name, flight_id, seat_row, seat_column) VALUES (:firstName, :lastName, :flightId, :seatRow, :seatColumn)');
@@ -122,15 +125,13 @@ foreach ($bookings as $booking) {
   array_push($seatsBooked, $booking->seat_row . $booking->seat_column);
 }
 
-// take out booked seats from the $seats array
+// take out already-booked seats from the $seats array
 $seats = array_diff($seats, $seatsBooked);
 ?>
 
 <div class="seatSelection">
   <p class="seatSelection">Select a seat from the following availablities:</p>
-  <p class="errors"><?php foreach ($seatErrors as $error) {
-                      echo ("$error <br>");
-                    } ?></p>
+  <?php echoErrors($seatErrors); ?>
   <form action="<?= htmlspecialchars("{$_SERVER['PHP_SELF']}?flightId={$_GET['flightId']}") ?>" method="post">
     <?php for ($r = 1; $r < ($availabilityInfo->number_of_rows + 1); $r++) { ?>
       <p><?= $r ?></p>
@@ -146,14 +147,9 @@ $seats = array_diff($seats, $seatsBooked);
       </div>
     <?php } ?>
     <hr>
-    <p>First name: <input type="text" name="firstName" <?php if (isset($_POST['firstName'])) { ?> value="<?= $_POST['firstName'] ?>" <?php } ?>></p>
-    <p class="errors"><?php foreach ($firstNameErrors as $error) {
-                        echo ("$error <br>");
-                      } ?></p>
+    <?php echoNameField('First name', 'firstName', $firstNameErrors); ?>
     <p>Last name: <input type="text" name="lastName" <?php if (isset($_POST['lastName'])) { ?> value="<?= $_POST['lastName'] ?>" <?php } ?>></p>
-    <p class="errors"><?php foreach ($lastNameErrors as $error) {
-                        echo ("$error <br>");
-                      } ?></p>
+    <?php echoErrors($lastNameErrors); ?>
     <hr>
     <input type="submit" value="Book" name="bookButton">
   </form>
