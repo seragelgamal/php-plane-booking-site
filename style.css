@@ -56,8 +56,14 @@ div.seatSelection {
   flex-direction: column;
 } */
 
-input:disabled {
-  border: 1px solid grey;
+input[type='radio'][disabled] {
+  background-color: red;
+  border-color: red;
+  color: red;
+}
+
+input[type='number'] {
+  width: 70px;
 }
 
 table {

@@ -20,7 +20,6 @@ if (isset($_POST['bookButton'])) {
   // redirect to booking page, sending along flight id for selected flight
   header("Location: bookFlight.php?flightId={$_POST['flightId']}");
 }
-
 ?>
 
 <?php if (isset($route->origin) && isset($route->destination)) { ?>
@@ -53,6 +52,6 @@ if (isset($_POST['bookButton'])) {
 <?php } else { ?>
   <h3>Error: the requested flight was not found in the database</h3>
   <a href="index.php"><button>Return to homepage</button></a>
-<?php } ?>
+<?php }
 
-<?php require('templates/footer.php'); ?>
+require('templates/footer.php'); ?>

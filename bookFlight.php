@@ -19,7 +19,6 @@ $seatErrors = $firstNameErrors = $lastNameErrors = [];
 // returns an array of the errors for a user-entered name
 function errorArray(string $nameVariable, string $fieldName) {
   $errorArray = [];
-
   // make sure name's not blank
   if ($nameVariable == '') {
     array_push($errorArray, "$fieldName is required");
@@ -32,10 +31,8 @@ function errorArray(string $nameVariable, string $fieldName) {
   if (strlen($nameVariable) > 255) {
     array_push($errorArray, "$fieldName can only be a maximum of 255 characters long");
   }
-
   return $errorArray;
 }
-
 // returns the formatted version of a user-entered name
 function formatName(string $nameVariable) {
   // take out spaces from the start and end of the name if they exist
@@ -44,19 +41,18 @@ function formatName(string $nameVariable) {
   $nameVariable = strtolower($nameVariable);
   // set first letter to uppercase
   $nameVariable = ucfirst($nameVariable);
-
   return $nameVariable;
 }
-
+// echoes errors from a specified error array with formatting
 function echoErrors(array $errorArray) { ?>
   <p class="errors"><?php foreach ($errorArray as $error) {
                       echo ("$error <br>");
                     } ?></p>
 <?php }
-
+// echoes a first/last name field with a given label for the user and POST superglobal index name, as well as the errors from a given error array with formatting
 function echoNameField(string $userFieldName, string $POSTfieldName, array $errorArray) { ?>
   <p><?= $userFieldName ?>: <input type="text" name="<?= $POSTfieldName ?>" <?php if (isset($_POST[$POSTfieldName])) { ?> value="<?= $_POST[$POSTfieldName] ?>" <?php } ?>></p>
-  <?php echoErrors($errorArray);
+<?php echoErrors($errorArray);
 }
 
 // form action
@@ -74,12 +70,12 @@ if (isset($_POST['bookButton'])) {
 
   // store first name
   $firstName = $_POST['firstName'];
-  // push first name errors to error array
+  // push any first name errors to first name error array
   $firstNameErrors = errorArray($firstName, 'First name');
 
   // store last name
   $lastName = $_POST['lastName'];
-  // push last name errors to last name error array
+  // push any last name errors to last name error array
   $lastNameErrors = errorArray($lastName, 'Last name');
 
   // if there's no errors: begin process to register the booking
@@ -101,6 +97,7 @@ if (isset($_POST['bookButton'])) {
   }
 }
 
+// code for seat selector:
 // get seat layout for flight selected, as well as booked seats
 if (isset($_GET['flightId'])) {
   $stmt = $pdo->query("SELECT number_of_rows, number_of_columns, seats_booked FROM flights WHERE id = {$_GET['flightId']}");
@@ -109,7 +106,6 @@ if (isset($_GET['flightId'])) {
   $stmt = $pdo->query("SELECT * FROM flight_bookings WHERE flight_id = {$_GET['flightId']}");
   $bookings = $stmt->fetchAll();
 }
-
 // set global array '$seats' to store all possible seats
 $columnLegend = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K'];
 $seats = [];
@@ -118,13 +114,11 @@ for ($seatRow = 1; $seatRow < 31; $seatRow++) {
     array_push($seats, $seatRow . $columnLegend[$seatColumn]);
   }
 }
-
-// set global array to store the seats that are already booked
+// set global array '$seatsBooked' to store the seats that are already booked
 $seatsBooked = [];
 foreach ($bookings as $booking) {
   array_push($seatsBooked, $booking->seat_row . $booking->seat_column);
 }
-
 // take out already-booked seats from the $seats array
 $seats = array_diff($seats, $seatsBooked);
 ?>
@@ -140,16 +134,16 @@ $seats = array_diff($seats, $seatsBooked);
           <?php for ($c = 0; $c < ($availabilityInfo->number_of_columns); $c++) { ?>
             <input type="radio" name="seat" value="<?= "$r{$columnLegend[$c]}" ?>" <?php foreach ($bookings as $booking) {
                                                                                       if ("$r{$columnLegend[$c]}" == "{$booking->seat_row}{$booking->seat_column}") { ?> disabled <?php }
-                                                                                                                                                                              }
-                                                                                                                                                                              if ("$r{$columnLegend[$c]}" == "$row$column") { ?> checked <?php } ?>><?= $columnLegend[$c] ?>
+                                                                                                      }
+                                                                                                      if ("$r{$columnLegend[$c]}" == "$row$column") { ?> checked <?php } ?>>
+            <?= $columnLegend[$c] ?>
           <?php } ?>
         </div>
       </div>
     <?php } ?>
     <hr>
     <?php echoNameField('First name', 'firstName', $firstNameErrors); ?>
-    <p>Last name: <input type="text" name="lastName" <?php if (isset($_POST['lastName'])) { ?> value="<?= $_POST['lastName'] ?>" <?php } ?>></p>
-    <?php echoErrors($lastNameErrors); ?>
+    <?php echoNameField('Last name', 'lastName', $lastNameErrors); ?>
     <hr>
     <input type="submit" value="Book" name="bookButton">
   </form>
