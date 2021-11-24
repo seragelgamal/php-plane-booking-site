@@ -1,7 +1,7 @@
 <?php
 
 // require header template
-require('templates/header.php');
+require('misc/header.php');
 
 // get all routes from database
 $stmt = $pdo->query('SELECT * FROM routes');
@@ -39,8 +39,24 @@ function echoOriginDestinationDropdown(string $POSTfieldName, array $totalRouteA
     } ?>
   </select>
 <?php }
+// function sortRoutesByProperty(array &$array, string $property) {
+//   $sortArray = [];
+//   foreach ($array as $element) {
+//     array_push($sortArray, $element->property);
+//   }
+//   insertionSort($sortArray);
+//   $sortedRoutes = $array;
+//   $searchedRoutes = [];
+//   foreach ($sortArray as $price) {
+//     foreach ($sortedRoutes as $route) {
+//       if ($route->price == $price) {
+//         array_push($searchedRoutes, $route);
+//       }
+//     }
+//   }
+// }
 
-// form action: get available flights based on specified filters
+// form action: get available flights based on specified filters and sort the results
 if (isset($_POST['submit'])) {
   if ($_POST['origin'] != '' && $_POST['destination'] != '') {
     // if both origin and destination are set
@@ -79,6 +95,44 @@ if (isset($_POST['submit'])) {
       }
     }
   }
+
+  // sorting
+  $sortArray = [];
+  if ($_POST['sortMode'] == 'cheapToExpensive') {
+    foreach ($searchedRoutes as $route) {
+      array_push($sortArray, $route->price);
+    }
+    insertionSort($sortArray);
+    $sortedRoutes = $searchedRoutes;
+    $searchedRoutes = [];
+    foreach ($sortArray as $price) {
+      foreach ($sortedRoutes as $route) {
+        if ($route->price == $price) {
+          array_push($searchedRoutes, $route);
+        }
+      }
+    }
+  }
+  if ($_POST['sortMode'] == 'expensiveToCheap') {
+    foreach ($searchedRoutes as $route) {
+      array_push($sortArray, $route->price);
+    }
+    insertionSort($sortArray);
+    $sortedRoutes = $searchedRoutes;
+    $searchedRoutes = [];
+    foreach ($sortArray as $price) {
+      foreach ($sortedRoutes as $route) {
+        if ($route->price == $price) {
+          array_push($searchedRoutes, $route);
+        }
+      }
+    }
+    $tempArray = $searchedRoutes;
+    $searchedRoutes = [];
+    for ($i = sizeof($tempArray) - 1; $i >= 0; $i--) {
+      array_push($searchedRoutes, $tempArray[$i]);
+    }
+  }
 } else {
   // if no filters are set
   foreach ($routes as $route) {
@@ -99,8 +153,16 @@ if (isset($_POST['submit'])) {
   <p>
     <?php echoPriceField('minimumPrice'); ?> to <?php echoPriceField('maximumPrice'); ?>
   </p>
+  <h2>Sort by:</h2>
   <p>
-    <input type="submit" value="Search" name="submit">
+    <input type="radio" name="sortMode">Default
+    <input type="radio" name="sortMode" value="cheapToExpensive">Price: low-high
+    <input type="radio" name="sortMode" value="expensiveToCheap">Price: high-low
+    <input type="radio" name="sortMode" value='a-z'>Alphabetically: a-z
+    <input type="radio" name="sortMode" value='z-a'> Alphabetically: z-a
+  </p>
+  <p>
+    <input type="submit" value="Apply Filters" name="submit">
   </p>
 </form>
 
@@ -127,4 +189,4 @@ if (isset($_POST['submit'])) {
 <?php } else { ?>
   <h2>No flights found based on the selected filters. Try changing the specified origin, destination, or price range</h2>
 <?php }
-require('templates/footer.php'); ?>
+require('misc/footer.php'); ?>

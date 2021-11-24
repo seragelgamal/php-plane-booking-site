@@ -8,6 +8,7 @@ h3.routeDescription {
   margin: auto 5px;
 }
 
+
 /* h3.scheduleHeading {
   text-decoration: none;
   color: red;
@@ -41,15 +42,18 @@ div.seatSelection {
   color: red;
 }
 
+
 /* tr {
   display: block;
   width: 100%;
 } */
 
+
 /* .seatRow {
   display: flex;
   flex-direction: row;
 } */
+
 
 /* .seatColumn {
   display: flex;
@@ -71,7 +75,8 @@ table {
   text-align: center;
 }
 
-td, th {
+td,
+th {
   padding: 5px;
   border: 1px solid black;
 }

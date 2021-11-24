@@ -1,7 +1,7 @@
 <?php
 
 // require header template
-require('templates/header.php');
+require('misc/header.php');
 
 // get schedule for route clicked and get origin and destination
 if (isset($_GET['routeId']) && $_GET['routeId'] != '') {
@@ -54,4 +54,4 @@ if (isset($_POST['bookButton'])) {
   <a href="index.php"><button>Return to homepage</button></a>
 <?php }
 
-require('templates/footer.php'); ?>
+require('misc/footer.php'); ?>

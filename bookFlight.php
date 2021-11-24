@@ -1,7 +1,7 @@
 <?php
 
 // require header template
-require('templates/header.php');
+require('misc/header.php');
 
 // make sure that the given id is actually a real id of a flight
 $stmt = $pdo->prepare('SELECT * FROM flights WHERE id=:flightId');
@@ -134,8 +134,8 @@ $seats = array_diff($seats, $seatsBooked);
           <?php for ($c = 0; $c < ($availabilityInfo->number_of_columns); $c++) { ?>
             <input type="radio" name="seat" value="<?= "$r{$columnLegend[$c]}" ?>" <?php foreach ($bookings as $booking) {
                                                                                       if ("$r{$columnLegend[$c]}" == "{$booking->seat_row}{$booking->seat_column}") { ?> disabled <?php }
-                                                                                                      }
-                                                                                                      if ("$r{$columnLegend[$c]}" == "$row$column") { ?> checked <?php } ?>>
+                                                                                                                                                                              }
+                                                                                                                                                                              if ("$r{$columnLegend[$c]}" == "$row$column") { ?> checked <?php } ?>>
             <?= $columnLegend[$c] ?>
           <?php } ?>
         </div>
@@ -149,4 +149,4 @@ $seats = array_diff($seats, $seatsBooked);
   </form>
 </div>
 
-<?php require('templates/footer.php'); ?>
+<?php require('misc/footer.php'); ?>
