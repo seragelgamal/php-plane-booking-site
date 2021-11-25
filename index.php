@@ -39,22 +39,26 @@ function echoOriginDestinationDropdown(string $POSTfieldName, array $totalRouteA
     } ?>
   </select>
 <?php }
-// function sortRoutesByProperty(array &$array, string $property) {
-//   $sortArray = [];
-//   foreach ($array as $element) {
-//     array_push($sortArray, $element->property);
-//   }
-//   insertionSort($sortArray);
-//   $sortedRoutes = $array;
-//   $searchedRoutes = [];
-//   foreach ($sortArray as $price) {
-//     foreach ($sortedRoutes as $route) {
-//       if ($route->price == $price) {
-//         array_push($searchedRoutes, $route);
-//       }
-//     }
-//   }
-// }
+function sortElementsByProperty(array &$array, string $property) {
+  $arrayOfProperties = [];
+  foreach ($array as $element) {
+    array_push($arrayOfProperties, $element->$property);
+  }
+  insertionSort($arrayOfProperties);
+  $copyOfArray = $array;
+  $array = [];
+  foreach ($arrayOfProperties as $elementProperty) {
+    foreach ($copyOfArray as $element) {
+      if ($element->$property == $elementProperty && !in_array($element, $array)) {
+        array_push($array, $element);
+      }
+    }
+  }
+}
+function echoRadioInput(string $POSTfieldName, string $value, string $label) { ?>
+  <input type="radio" name="<?= $POSTfieldName ?>" value="<?= $value ?>" <?php if ($_POST[$POSTfieldName] == $value) { ?> checked <?php } ?>>
+<?php echo ($label);
+}
 
 // form action: get available flights based on specified filters and sort the results
 if (isset($_POST['submit'])) {
@@ -97,40 +101,22 @@ if (isset($_POST['submit'])) {
   }
 
   // sorting
-  $sortArray = [];
-  if ($_POST['sortMode'] == 'cheapToExpensive') {
-    foreach ($searchedRoutes as $route) {
-      array_push($sortArray, $route->price);
-    }
-    insertionSort($sortArray);
-    $sortedRoutes = $searchedRoutes;
-    $searchedRoutes = [];
-    foreach ($sortArray as $price) {
-      foreach ($sortedRoutes as $route) {
-        if ($route->price == $price) {
-          array_push($searchedRoutes, $route);
-        }
-      }
-    }
-  }
-  if ($_POST['sortMode'] == 'expensiveToCheap') {
-    foreach ($searchedRoutes as $route) {
-      array_push($sortArray, $route->price);
-    }
-    insertionSort($sortArray);
-    $sortedRoutes = $searchedRoutes;
-    $searchedRoutes = [];
-    foreach ($sortArray as $price) {
-      foreach ($sortedRoutes as $route) {
-        if ($route->price == $price) {
-          array_push($searchedRoutes, $route);
-        }
-      }
-    }
-    $tempArray = $searchedRoutes;
-    $searchedRoutes = [];
-    for ($i = sizeof($tempArray) - 1; $i >= 0; $i--) {
-      array_push($searchedRoutes, $tempArray[$i]);
+  if ($_POST['sortMode'] != 'default') {
+    if ($_POST['sortMode'] == 'cheapToExpensive') {
+      sortElementsByProperty($searchedRoutes, 'price');
+    } else if ($_POST['sortMode'] == 'expensiveToCheap') {
+      sortElementsByProperty($searchedRoutes, 'price');
+      $searchedRoutes = array_reverse($searchedRoutes);
+    } else if ($_POST['sortMode'] == 'a-zOrigin') {
+      sortElementsByProperty($searchedRoutes, 'origin');
+    } else if ($_POST['sortMode'] == 'z-aOrigin') {
+      sortElementsByProperty($searchedRoutes, 'origin');
+      $searchedRoutes = array_reverse($searchedRoutes);
+    } else if ($_POST['sortMode'] == 'a-zDestination') {
+      sortElementsByProperty($searchedRoutes, 'destination');
+    } else if ($_POST['sortMode'] == 'z-aDestination') {
+      sortElementsByProperty($searchedRoutes, 'destination');
+      $searchedRoutes = array_reverse($searchedRoutes);
     }
   }
 } else {
@@ -138,6 +124,8 @@ if (isset($_POST['submit'])) {
   foreach ($routes as $route) {
     array_push($searchedRoutes, $route);
   }
+  // set sort mode to 'default' by default
+  $_POST['sortMode'] = 'default';
 }
 ?>
 
@@ -155,11 +143,13 @@ if (isset($_POST['submit'])) {
   </p>
   <h2>Sort by:</h2>
   <p>
-    <input type="radio" name="sortMode">Default
-    <input type="radio" name="sortMode" value="cheapToExpensive">Price: low-high
-    <input type="radio" name="sortMode" value="expensiveToCheap">Price: high-low
-    <input type="radio" name="sortMode" value='a-z'>Alphabetically: a-z
-    <input type="radio" name="sortMode" value='z-a'> Alphabetically: z-a
+    <?php echoRadioInput('sortMode', 'default', 'Default'); ?>
+    <?php echoRadioInput('sortMode', 'cheapToExpensive', 'Price: low-high'); ?>
+    <?php echoRadioInput('sortMode', 'expensiveToCheap', 'Price: high-low'); ?>
+    <?php echoRadioInput('sortMode', 'a-zOrigin', 'Alphabetically by origin: A-Z'); ?>
+    <?php echoRadioInput('sortMode', 'z-aOrigin', 'Alphabetically by origin: Z-A'); ?>
+    <?php echoRadioInput('sortMode', 'a-zDestination', 'Alphabetically by destination: A-Z'); ?>
+    <?php echoRadioInput('sortMode', 'z-aDestination', 'Alphabetically by destination: Z-A'); ?>
   </p>
   <p>
     <input type="submit" value="Apply Filters" name="submit">
