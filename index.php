@@ -10,79 +10,32 @@ $routes = $stmt->fetchAll();
 // set global variable for relevant routes based on search
 $searchedRoutes = [];
 
-// FUNCTIONS:
-// origin/destination filter function: pushes values from array of all routes that match with the specified location filter (either 'origin' or 'destination')
-function originDestinationFilter(array $totalRouteArray, string $filterLocation, string $formValue, array &$filteredRouteArray) {
-  foreach ($totalRouteArray as $route) {
-    if ($route->$filterLocation == $formValue) {
-      array_push($filteredRouteArray, $route);
-    }
-  }
-}
-// price filter function: takes value with specified index out of the specified array and re-keys the array
-function priceFilter(array &$array, int $i) {
-  unset($array[$i]);
-  $array = array_values($array);
-}
-function echoPriceField(string $POSTfieldName) { ?>
-  $<input type="number" name=<?= $POSTfieldName ?> min="0" placeholder="any price" <?php if (isset($_POST[$POSTfieldName])) { ?> value="<?= $_POST[$POSTfieldName] ?>" <?php } ?>>
-<?php }
-function echoOriginDestinationDropdown(string $POSTfieldName, array $totalRouteArray) { ?>
-  <select name=<?= $POSTfieldName ?>>
-    <option value="">All <?= $POSTfieldName ?>s</option>
-    <?php $originDestinationArray = [];
-    foreach ($totalRouteArray as $route) {
-      if (!in_array($route->$POSTfieldName, $originDestinationArray)) {
-        array_push($originDestinationArray, $route->$POSTfieldName); ?>
-        <option <?php if (isset($_POST[$POSTfieldName]) && $_POST[$POSTfieldName] == $route->$POSTfieldName) { ?> selected <?php } ?>><?= $route->$POSTfieldName ?></option>
-    <?php }
-    } ?>
-  </select>
-<?php }
-function sortElementsByProperty(array &$array, string $property) {
-  $arrayOfProperties = [];
-  foreach ($array as $element) {
-    array_push($arrayOfProperties, $element->$property);
-  }
-  insertionSort($arrayOfProperties);
-  $copyOfArray = $array;
-  $array = [];
-  foreach ($arrayOfProperties as $elementProperty) {
-    foreach ($copyOfArray as $element) {
-      if ($element->$property == $elementProperty && !in_array($element, $array)) {
-        array_push($array, $element);
-      }
-    }
-  }
-}
-function echoRadioInput(string $POSTfieldName, string $value, string $label) { ?>
-  <input type="radio" name="<?= $POSTfieldName ?>" value="<?= $value ?>" <?php if ($_POST[$POSTfieldName] == $value) { ?> checked <?php } ?>>
-<?php echo ($label);
-}
-
 // form action: get available flights based on specified filters and sort the results
 if (isset($_POST['submit'])) {
+  // origin/destination filters
   if ($_POST['origin'] != '' && $_POST['destination'] != '') {
-    // if both origin and destination are set
+    // if both origin and destination are set: display all the routes with the specified origin and destination
     foreach ($routes as $route) {
       if ($route->origin == $_POST['origin'] && $route->destination == $_POST['destination']) {
         array_push($searchedRoutes, $route);
       }
     }
   } else if ($_POST['origin'] != '') {
-    // if only origin is set
+    // if only origin is set: filter out the routes that don't depart from the specified origin
     originDestinationFilter($routes, 'origin', $_POST['origin'], $searchedRoutes);
   } else if ($_POST['destination'] != '') {
-    // if only destination is set
+    // if only destination is set: filter out the routes that don't arrive at the specified destination
     originDestinationFilter($routes, 'destination', $_POST['destination'], $searchedRoutes);
   } else {
-    // neither are set
+    // if neither origin nor destination are set: displaty all the routes
     foreach ($routes as $route) {
       array_push($searchedRoutes, $route);
     }
   }
+
+  // price filters
+  // if min price is set: filter out the routes whose ticket price is more expensive than it
   if ($_POST['minimumPrice'] != '') {
-    // if min price is set
     for ($i = 0; $i < sizeof($searchedRoutes); $i++) {
       if ($searchedRoutes[$i]->price < $_POST['minimumPrice']) {
         priceFilter($searchedRoutes, $i);
@@ -90,8 +43,8 @@ if (isset($_POST['submit'])) {
       }
     }
   }
+  // if max price is set: filter out the routes whose ticket price is cheaper than it
   if ($_POST['maximumPrice'] != '') {
-    // if max price is set
     for ($i = 0; $i < sizeof($searchedRoutes); $i++) {
       if ($searchedRoutes[$i]->price > $_POST['maximumPrice']) {
         priceFilter($searchedRoutes, $i);
@@ -100,27 +53,33 @@ if (isset($_POST['submit'])) {
     }
   }
 
-  // sorting
+  // sorting of final filtered result
   if ($_POST['sortMode'] != 'default') {
     if ($_POST['sortMode'] == 'cheapToExpensive') {
+      // if low-high price sorting is selected: sort the flights by price
       sortElementsByProperty($searchedRoutes, 'price');
     } else if ($_POST['sortMode'] == 'expensiveToCheap') {
+      // if high-low price sorting is selected: sort the flights by price then reverse them
       sortElementsByProperty($searchedRoutes, 'price');
       $searchedRoutes = array_reverse($searchedRoutes);
     } else if ($_POST['sortMode'] == 'a-zOrigin') {
+      // if alphabetic origin sorting is selected: sort the flights by origin name
       sortElementsByProperty($searchedRoutes, 'origin');
     } else if ($_POST['sortMode'] == 'z-aOrigin') {
+      // if reverse alphabetic origin sorting is selected: sort the flights by origin name then reverse them
       sortElementsByProperty($searchedRoutes, 'origin');
       $searchedRoutes = array_reverse($searchedRoutes);
     } else if ($_POST['sortMode'] == 'a-zDestination') {
+      // if alphabetic destination sorting is selected: sort the flights by destination name
       sortElementsByProperty($searchedRoutes, 'destination');
     } else if ($_POST['sortMode'] == 'z-aDestination') {
+      // if alphabetic destination sorting is selected: sort the flights by destination name then reverse them
       sortElementsByProperty($searchedRoutes, 'destination');
       $searchedRoutes = array_reverse($searchedRoutes);
     }
   }
 } else {
-  // if no filters are set
+  // if no filters are set: display all routes
   foreach ($routes as $route) {
     array_push($searchedRoutes, $route);
   }
@@ -171,12 +130,16 @@ if (isset($_POST['submit'])) {
       </div>
     </a>
   <?php }
-  // if search doesn't yield any results
+  // if search doesn't yield any results:
 } else if ((!($_POST['minimumPrice'] <= $_POST['maximumPrice'])) && $_POST['minimumPrice'] != '' && $_POST['maximumPrice'] != '') { ?>
+  <!-- if the issue is with the price filters: -->
   <h2>Please ensure maximum price is greater than minimum price.</h2>
 <?php } else if (($_POST['origin'] == $_POST['destination']) && ($_POST['origin'] != '')) { ?>
+  <!-- if the issue is with the origin/destination filters: -->
   <h2>Please select different cities for the origin and destination.</h2>
 <?php } else { ?>
+  <!-- if there's no issue with the filters, but there was just no matching flight: -->
   <h2>No flights found based on the selected filters. Try changing the specified origin, destination, or price range</h2>
 <?php }
+// footer
 require('misc/footer.php'); ?>

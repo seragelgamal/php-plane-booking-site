@@ -11,49 +11,9 @@ if ($stmt->rowCount() == 0) {
   header('Location: index.php');
 }
 
-// set global form and seat info variables
+// set global form and seat info variables and error arrays
 $seat = $row = $column = $firstName = $lastName = $availabilityInfo = '';
 $seatErrors = $firstNameErrors = $lastNameErrors = [];
-
-// FUNCTIONS:
-// returns an array of the errors for a user-entered name
-function errorArray(string $nameVariable, string $fieldName) {
-  $errorArray = [];
-  // make sure name's not blank
-  if ($nameVariable == '') {
-    array_push($errorArray, "$fieldName is required");
-  }
-  // make sure name's only letters
-  if (preg_match('~[0-9]~', $nameVariable)) {
-    array_push($errorArray, "$fieldName can only contain letters");
-  }
-  // make sure name isn't longer than 255 characters
-  if (strlen($nameVariable) > 255) {
-    array_push($errorArray, "$fieldName can only be a maximum of 255 characters long");
-  }
-  return $errorArray;
-}
-// returns the formatted version of a user-entered name
-function formatName(string $nameVariable) {
-  // take out spaces from the start and end of the name if they exist
-  $nameVariable = trim($nameVariable);
-  // convert all letters to lower case
-  $nameVariable = strtolower($nameVariable);
-  // set first letter to uppercase
-  $nameVariable = ucfirst($nameVariable);
-  return $nameVariable;
-}
-// echoes errors from a specified error array with formatting
-function echoErrors(array $errorArray) { ?>
-  <p class="errors"><?php foreach ($errorArray as $error) {
-                      echo ("$error <br>");
-                    } ?></p>
-<?php }
-// echoes a first/last name field with a given label for the user and POST superglobal index name, as well as the errors from a given error array with formatting
-function echoNameField(string $userFieldName, string $POSTfieldName, array $errorArray) { ?>
-  <p><?= $userFieldName ?>: <input type="text" name="<?= $POSTfieldName ?>" <?php if (isset($_POST[$POSTfieldName])) { ?> value="<?= $_POST[$POSTfieldName] ?>" <?php } ?>></p>
-<?php echoErrors($errorArray);
-}
 
 // form action
 if (isset($_POST['bookButton'])) {
@@ -123,10 +83,12 @@ foreach ($bookings as $booking) {
 $seats = array_diff($seats, $seatsBooked);
 ?>
 
+<!-- seat selector: -->
 <div class="seatSelection">
   <p class="seatSelection">Select a seat from the following availablities:</p>
   <?php echoErrors($seatErrors); ?>
   <form action="<?= htmlspecialchars("{$_SERVER['PHP_SELF']}?flightId={$_GET['flightId']}") ?>" method="post">
+  <!-- put in a radio input for each seat, faded out if the seat is already booked -->
     <?php for ($r = 1; $r < ($availabilityInfo->number_of_rows + 1); $r++) { ?>
       <p><?= $r ?></p>
       <div class="seatRow">
@@ -142,6 +104,7 @@ $seats = array_diff($seats, $seatsBooked);
       </div>
     <?php } ?>
     <hr>
+    <!-- personal info input: -->
     <?php echoNameField('First name', 'firstName', $firstNameErrors); ?>
     <?php echoNameField('Last name', 'lastName', $lastNameErrors); ?>
     <hr>
@@ -149,4 +112,5 @@ $seats = array_diff($seats, $seatsBooked);
   </form>
 </div>
 
+<!-- footer -->
 <?php require('misc/footer.php'); ?>
