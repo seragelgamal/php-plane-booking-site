@@ -2,6 +2,14 @@
 
 // FUNCTIONS:
 
+// multi-use functions:
+function pushErrorIfBlank(string $inputString, array $errorArray, string $fieldName) {
+  if ($inputString == '') {
+    array_push($errorArray, "$fieldName is required");
+  }
+}
+
+// document-specific functions:
 // index.php:
 // import sort algorithm library
 require('sortAlgorithms.php');
@@ -60,12 +68,10 @@ function echoRadioInput(string $POSTfieldName, string $value, string $label) { ?
 
 // bookFlight.php:
 // returns an array of the errors for a user-entered name
-function errorArray(string $nameVariable, string $fieldName) {
+function nameErrorArray(string $nameVariable, string $fieldName) {
   $errorArray = [];
   // make sure name's not blank
-  if ($nameVariable == '') {
-    array_push($errorArray, "$fieldName is required");
-  }
+  pushErrorIfBlank($nameVariable, $errorArray, $fieldName);
   // make sure name's only letters
   if (preg_match('~[0-9]~', $nameVariable)) {
     array_push($errorArray, "$fieldName can only contain letters");
@@ -107,12 +113,14 @@ $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_OBJ);
 <html>
 
 <!-- page header -->
+
 <head>
   <title>Flight Booking</title>
   <link rel="stylesheet" href="style.css">
 </head>
 
 <!-- common top bar for all pages -->
+
 <body>
   <a href="index.php">
     <h1>Flight Booking</h1>

@@ -31,12 +31,12 @@ if (isset($_POST['bookButton'])) {
   // store first name
   $firstName = $_POST['firstName'];
   // push any first name errors to first name error array
-  $firstNameErrors = errorArray($firstName, 'First name');
+  $firstNameErrors = nameErrorArray($firstName, 'First name');
 
   // store last name
   $lastName = $_POST['lastName'];
   // push any last name errors to last name error array
-  $lastNameErrors = errorArray($lastName, 'Last name');
+  $lastNameErrors = nameErrorArray($lastName, 'Last name');
 
   // if there's no errors: begin process to register the booking
   if (sizeof($seatErrors) == 0 && sizeof($firstNameErrors) == 0 && sizeof($lastNameErrors) == 0) {
