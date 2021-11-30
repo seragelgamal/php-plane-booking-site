@@ -3,9 +3,12 @@
 // FUNCTIONS:
 
 // multi-use functions:
-function pushErrorIfBlank(string $inputString, array $errorArray, string $fieldName) {
+function pushErrorIfBlank(string $inputString, array &$errorArray, string $fieldName) {
   if ($inputString == '') {
     array_push($errorArray, "$fieldName is required");
+    return true;
+  } else {
+    return false;
   }
 }
 
@@ -27,8 +30,8 @@ function priceFilter(array &$array, int $i) {
   $array = array_values($array);
 }
 // echoes a price input field with the specified POST field name to input minimum and maximum price
-function echoPriceField(string $POSTfieldName) { ?>
-  $<input type="number" name=<?= $POSTfieldName ?> min="0" placeholder="any price" <?php if (isset($_POST[$POSTfieldName])) { ?> value="<?= $_POST[$POSTfieldName] ?>" <?php } ?>>
+function echoPriceField(string $POSTfieldName, string $placeholder = '') { ?>
+  $<input type="number" name=<?= $POSTfieldName ?> min="0" placeholder="<?= $placeholder ?>" <?php if (isset($_POST[$POSTfieldName])) { ?> value="<?= $_POST[$POSTfieldName] ?>" <?php } ?>>
 <?php }
 // echoes an origin/destination filter with the specified POST field name to input origin/destination filters
 function echoOriginDestinationDropdown(string $POSTfieldName, array $totalRouteArray) { ?>
@@ -102,6 +105,29 @@ function echoErrors(array $errorArray) { ?>
 function echoNameField(string $userFieldName, string $POSTfieldName, array $errorArray) { ?>
   <p><?= $userFieldName ?>: <input type="text" name="<?= $POSTfieldName ?>" <?php if (isset($_POST[$POSTfieldName])) { ?> value="<?= $_POST[$POSTfieldName] ?>" <?php } ?>></p>
 <?php echoErrors($errorArray);
+}
+
+// adminLogin.php
+// return an array of all the errors found for an admin-entered username
+function usernameErrorArray(string $usernameVariable) {
+  $errorArray = [];
+  if (!pushErrorIfBlank($usernameVariable, $errorArray, 'Username')) {
+    $usernameVariable = trim($usernameVariable);
+    if (str_contains($usernameVariable, ' ')) {
+      array_push($errorArray, "Username can't contain spaces");
+    }
+  }
+  return $errorArray;
+}
+// return an array of all the errors found for an admin-entered password
+function pwdErrorArray(string $pwdVariable) {
+  $errorArray = [];
+  if (!pushErrorIfBlank($pwdVariable, $errorArray, 'Password')) {
+    if ($pwdVariable[0] == ' ' || $pwdVariable[strlen($pwdVariable) - 1] == ' ') {
+      array_push($errorArray, "Password can't start or end with a space");
+    }
+  }
+  return $errorArray;
 }
 
 // establish mySQL connection via PDO
