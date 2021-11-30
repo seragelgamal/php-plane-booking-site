@@ -98,7 +98,7 @@ if (isset($_POST['submit'])) {
   </p>
   <h2>Filter by price:</h2>
   <p>
-    <?php echoPriceField('minimumPrice'); ?> to <?php echoPriceField('maximumPrice'); ?>
+    <?php echoPriceField('minimumPrice', 'any price'); ?> to <?php echoPriceField('maximumPrice', 'any price'); ?>
   </p>
   <h2>Sort by:</h2>
   <p>
