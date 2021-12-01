@@ -3,9 +3,7 @@
 // Require header template
 require('misc/header.php');
 
-$loginErrors = [];
-$usernameErrors = [];
-$pwdErrors = [];
+$loginErrors = $usernameErrors = $pwdErrors = [];
 
 // form action
 if (isset($_POST['logIn'])) {

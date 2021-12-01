@@ -41,8 +41,8 @@ if (isset($_POST['bookButton'])) {
   // if there's no errors: begin process to register the booking
   if (sizeof($seatErrors) == 0 && sizeof($firstNameErrors) == 0 && sizeof($lastNameErrors) == 0) {
     // format first and last name
-    $firstName = formatName($firstName);
-    $lastName = formatName($lastName);
+    $firstName = formatNameOriginDestination($firstName);
+    $lastName = formatNameOriginDestination($lastName);
 
     // push name and seat to server
     $stmt = $pdo->prepare('INSERT INTO flight_bookings (first_name, last_name, flight_id, seat_row, seat_column) VALUES (:firstName, :lastName, :flightId, :seatRow, :seatColumn)');

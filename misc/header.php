@@ -3,13 +3,28 @@
 // FUNCTIONS:
 
 // multi-use functions:
-function pushErrorIfBlank(string $inputString, array &$errorArray, string $fieldName) {
-  if ($inputString == '') {
+// pushes appropriate errors if something is blank
+function pushErrorIfBlank($input, array &$errorArray, string $fieldName) {
+  if ($input == '') {
     array_push($errorArray, "$fieldName is required");
     return true;
   } else {
     return false;
   }
+}
+// echoes a text field with the given POST field name and placeholder
+function echoTextField(string $POSTfieldName, string $placeholder = '') { ?>
+  <input type="text" name="<?= $POSTfieldName ?>" placeholder="<?= $placeholder ?>" <?php if (isset($_POST[$POSTfieldName])) { ?> value="<?= $_POST[$POSTfieldName] ?>" <?php } ?>>
+<?php }
+// returns the properly-formatted version of a user-entered name
+function formatNameOriginDestination(string $nameVariable) {
+  // take out spaces from the start and end of the name if they exist
+  $nameVariable = trim($nameVariable);
+  // convert all letters to lower case
+  $nameVariable = strtolower($nameVariable);
+  // set first letter to uppercase
+  $nameVariable = ucwords($nameVariable);
+  return $nameVariable;
 }
 
 // document-specific functions:
@@ -72,28 +87,12 @@ function echoRadioInput(string $POSTfieldName, string $value, string $label) { ?
 // bookFlight.php:
 // returns an array of the errors for a user-entered name
 function nameErrorArray(string $nameVariable, string $fieldName) {
-  $errorArray = [];
-  // make sure name's not blank
-  pushErrorIfBlank($nameVariable, $errorArray, $fieldName);
+  $errorArray = originDestinationErrorArray($nameVariable, $fieldName);
   // make sure name's only letters
   if (preg_match('~[0-9]~', $nameVariable)) {
     array_push($errorArray, "$fieldName can only contain letters");
   }
-  // make sure name isn't longer than 255 characters
-  if (strlen($nameVariable) > 255) {
-    array_push($errorArray, "$fieldName can only be a maximum of 255 characters long");
-  }
   return $errorArray;
-}
-// returns the properly-formatted version of a user-entered name
-function formatName(string $nameVariable) {
-  // take out spaces from the start and end of the name if they exist
-  $nameVariable = trim($nameVariable);
-  // convert all letters to lower case
-  $nameVariable = strtolower($nameVariable);
-  // set first letter to uppercase
-  $nameVariable = ucfirst($nameVariable);
-  return $nameVariable;
 }
 // echoes errors from a specified error array with formatting
 function echoErrors(array $errorArray) { ?>
@@ -126,6 +125,19 @@ function pwdErrorArray(string $pwdVariable) {
     if ($pwdVariable[0] == ' ' || $pwdVariable[strlen($pwdVariable) - 1] == ' ') {
       array_push($errorArray, "Password can't start or end with a space");
     }
+  }
+  return $errorArray;
+}
+
+// admin.php
+// returns an error of the arrays for an admin-entered origin/destination name
+function originDestinationErrorArray(string $originDestinationVariable, string $fieldName) {
+  $errorArray = [];
+  // make sure name's not blank
+  pushErrorIfBlank($originDestinationVariable, $errorArray, $fieldName);
+  // make sure name isn't longer than 255 characters
+  if (strlen($originDestinationVariable) > 255) {
+    array_push($errorArray, "$fieldName can only be a maximum of 255 characters long");
   }
   return $errorArray;
 }
