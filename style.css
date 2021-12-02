@@ -76,3 +76,7 @@ th {
   padding: 5px;
   border: 1px solid black;
 }
+
+h2.feedbackMessage {
+  color: blue;
+}

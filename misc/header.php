@@ -141,6 +141,14 @@ function originDestinationErrorArray(string $originDestinationVariable, string $
   }
   return $errorArray;
 }
+// echoes a date input field with the given POST field name
+function echoDateField(string $POSTfieldName) { ?>
+  Date: <input type="date" name="<?= $POSTfieldName ?>" <?php if (isset($_POST[$POSTfieldName])) { ?> value="<?= $_POST[$POSTfieldName] ?>" <?php } ?>>
+<?php }
+// echoes a time input field with the given POST field name
+function echoTimeField(string $POSTfieldName) { ?>
+  Time: <input type="time" name="<?= $POSTfieldName ?>" <?php if (isset($_POST[$POSTfieldName])) { ?> value="<?= $_POST[$POSTfieldName] ?>" <?php } ?>>
+<?php }
 
 // establish mySQL connection via PDO
 $pdo = new PDO("mysql:host=localhost;dbname=flightbooking", 'flightbooking', 'bookflights');
