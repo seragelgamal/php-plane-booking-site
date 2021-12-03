@@ -5,6 +5,16 @@ require('misc/header.php');
 $addTripErrors = $modifyTripErrors = $editPassengersErrors = $blacklistErrors = [];
 $feedbackMessage = '';
 
+// get all available trips for the modify trip section
+$stmt = $pdo->query("SELECT * FROM flights");
+$trips = $stmt->fetchAll();
+// var_dump($trips);
+
+// get an array of all the routes
+$stmt = $pdo->query('SELECT * FROM routes');
+$routes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+var_dump($routes);
+
 // form action
 if (isset($_POST['submit'])) {
   if ($_POST['submit'] == 'Add Trip') {
@@ -34,19 +44,15 @@ if (isset($_POST['submit'])) {
       $origin = formatNameOriginDestination($origin);
       $destination = formatNameOriginDestination($destination);
 
-      // check if a route already exists with the specified origin, destination, and price
-      $stmt = $pdo->prepare('SELECT * FROM routes WHERE origin=:origin && destination=:destination && price=:price');
-      $stmt->execute(['origin' => $origin, 'destination' => $destination, 'price' => $_POST['addTripPrice']]);
-      $route = $stmt->fetch();
-      if ($stmt->rowCount() == 0) {
+      // try storing the route with the specified origin, destination, and price. if it doesn't exist, create it
+      if (!($route = getRouteFromDatabase($pdo, 'routes', $origin, $destination, $_POST['addTripPrice']))) {
         // add a new route with the given origin, destination, and price, and add a trip to the new route with the given date, time, and aircraft info
         $stmt = $pdo->prepare('INSERT INTO routes (origin, destination, price) VALUES (:origin, :destination, :price)');
         $stmt->execute(['origin' => $origin, 'destination' => $destination, 'price' => $_POST['addTripPrice']]);
         $feedbackMessage = $feedbackMessage . 'No route was found with the specified origin, destination, and price - a new route was added<br>';
 
-        $stmt = $pdo->prepare('SELECT * FROM routes WHERE origin=:origin && destination=:destination && price=:price');
-        $stmt->execute(['origin' => $origin, 'destination' => $destination, 'price' => $_POST['addTripPrice']]);
-        $route = $stmt->fetch();
+        // get the route from the database now that it exists
+        $route = getRouteFromDatabase($pdo, 'routes', $origin, $destination, $_POST['addTripPrice']);
       }
       // add a trip to the route with the specified origin, destination, and price with the given date, time, and aircraft info
       $stmt = $pdo->prepare('INSERT INTO flights (route_id, date, time, number_of_rows, number_of_columns, capacity) VALUES (:routeId, :date, :time, :numberOfRows, :numberOfColumns, :capacity)');
@@ -59,11 +65,6 @@ if (isset($_POST['submit'])) {
   }
 }
 
-function echoRowColumnNumberField(string $POSTfieldName, string $placeholder, int $max) { ?>
-  <input type="number" name="<?= $POSTfieldName ?>" placeholder="<?= $placeholder ?>" min='1' max='<?= $max ?>' <?php if (isset($_POST[$POSTfieldName])) { ?> value="<?= $_POST[$POSTfieldName] ?>" <?php } ?>>
-<?php }
-
-// $feedbackMessage = 'test';
 
 ?>
 
@@ -84,6 +85,13 @@ function echoRowColumnNumberField(string $POSTfieldName, string $placeholder, in
   <input type="submit" name="submit" value="Add Trip">
   <hr>
   <h2>Modify trip info</h2>
+  <h3>Trip to modify:</h3>
+  <select name="modifyTripTrip">
+    <option value="">Select a trip to modify...</option>
+    <?php foreach ($trips as $trip) { ?>
+      <option value="<?= $trip->id ?>"><?= $routes[$trip->route_id - 1]['origin'] ?> to <?= $routes[$trip->route_id - 1]['destination'] ?></option>
+    <?php } ?>
+  </select>
   <hr>
   <h2>Edit passenger list/delete passengers</h2>
   <hr>

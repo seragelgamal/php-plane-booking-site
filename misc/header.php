@@ -3,8 +3,8 @@
 // FUNCTIONS:
 
 // multi-use functions:
-// pushes appropriate errors if something is blank
-function pushErrorIfBlank($input, array &$errorArray, string $fieldName) {
+// pushes appropriate error if something is blank
+function pushErrorIfBlank(mixed $input, array &$errorArray, string $fieldName) {
   if ($input == '') {
     array_push($errorArray, "$fieldName is required");
     return true;
@@ -149,6 +149,16 @@ function echoDateField(string $POSTfieldName) { ?>
 function echoTimeField(string $POSTfieldName) { ?>
   Time: <input type="time" name="<?= $POSTfieldName ?>" <?php if (isset($_POST[$POSTfieldName])) { ?> value="<?= $_POST[$POSTfieldName] ?>" <?php } ?>>
 <?php }
+// echoes a row/column number input field
+function echoRowColumnNumberField(string $POSTfieldName, string $placeholder, int $max) { ?>
+  <input type="number" name="<?= $POSTfieldName ?>" placeholder="<?= $placeholder ?>" min='1' max='<?= $max ?>' <?php if (isset($_POST[$POSTfieldName])) { ?> value="<?= $_POST[$POSTfieldName] ?>" <?php } ?>>
+<?php }
+// returns the route with the specified origin, destination, and price from the specified table in a database
+function getRouteFromDatabase(PDO $pdoObject, string $routeTableName, string $origin, string $destination, string $price) {
+  $stmt = $pdoObject->prepare("SELECT * FROM $routeTableName WHERE origin=:origin && destination=:destination && price=:price");
+  $stmt->execute(['origin' => $origin, 'destination' => $destination, 'price' => $price]);
+  return $stmt->fetch(); // returns false if no such route exists
+}
 
 // establish mySQL connection via PDO
 $pdo = new PDO("mysql:host=localhost;dbname=flightbooking", 'flightbooking', 'bookflights');
