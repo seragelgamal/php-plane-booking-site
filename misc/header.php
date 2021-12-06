@@ -26,6 +26,23 @@ function formatNameOriginDestination(string $nameVariable) {
   $nameVariable = ucwords($nameVariable);
   return $nameVariable;
 }
+// sorts an array of similar objects by a given property
+function sortElementsByProperty(array &$array, string $property) {
+  $arrayOfProperties = [];
+  foreach ($array as $element) {
+    array_push($arrayOfProperties, $element->$property);
+  }
+  insertionSort($arrayOfProperties);
+  $copyOfArray = $array;
+  $array = [];
+  foreach ($arrayOfProperties as $elementProperty) {
+    foreach ($copyOfArray as $element) {
+      if ($element->$property == $elementProperty && !in_array($element, $array)) {
+        array_push($array, $element);
+      }
+    }
+  }
+}
 
 // document-specific functions:
 // index.php:
@@ -61,23 +78,7 @@ function echoOriginDestinationDropdown(string $POSTfieldName, array $totalRouteA
     } ?>
   </select>
 <?php }
-// sorts an array of similar objects by a given property
-function sortElementsByProperty(array &$array, string $property) {
-  $arrayOfProperties = [];
-  foreach ($array as $element) {
-    array_push($arrayOfProperties, $element->$property);
-  }
-  insertionSort($arrayOfProperties);
-  $copyOfArray = $array;
-  $array = [];
-  foreach ($arrayOfProperties as $elementProperty) {
-    foreach ($copyOfArray as $element) {
-      if ($element->$property == $elementProperty && !in_array($element, $array)) {
-        array_push($array, $element);
-      }
-    }
-  }
-}
+
 // echoes a radio input with a given POST field name, value, and label to choose sort mode
 function echoRadioInput(string $POSTfieldName, string $value, string $label) { ?>
   <input type="radio" name="<?= $POSTfieldName ?>" value="<?= $value ?>" <?php if ($_POST[$POSTfieldName] == $value) { ?> checked <?php } ?>>

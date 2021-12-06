@@ -5,15 +5,30 @@ require('misc/header.php');
 $addTripErrors = $modifyTripErrors = $editPassengersErrors = $blacklistErrors = [];
 $feedbackMessage = '';
 
+// get an array of all the routes
+$stmt = $pdo->query('SELECT * FROM routes');
+$routes = $stmt->fetchAll();
+// var_dump($routes);
+
 // get all available trips for the modify trip section
 $stmt = $pdo->query("SELECT * FROM flights");
 $trips = $stmt->fetchAll();
-// var_dump($trips);
-
-// get an array of all the routes
-$stmt = $pdo->query('SELECT * FROM routes');
-$routes = $stmt->fetchAll(PDO::FETCH_ASSOC);
-var_dump($routes);
+// sort alphabetically by origin to make trips easier to browse
+// $originsOfTrips = [];
+// foreach ($trips as $trip) {
+//   $route = searchArrayOfObjects($routes, 'id', $trip->route_id);
+//   array_push($originsOfTrips, [$route->id, $route->origin]);
+// }
+// insertionSort($originsOfTrips);
+// // now have a sorted array of the origins of all the trips
+// $copyOfTrips = $trips;
+// $trips = [];
+// // foreach ($copyOfTrips as $trip) {
+// //   foreach ()
+// //   array_push($trips, searchArrayOfObjects($copyOfTrips, 'route_id', searchArrayOfObjects($routes, 'origin', $trip[1])));
+// // }
+// // var_dump($originsOfTrips);
+// // sortElementsByProperty($trips, 'origin');
 
 // form action
 if (isset($_POST['submit'])) {
@@ -62,9 +77,18 @@ if (isset($_POST['submit'])) {
 
       unset($_POST);
     }
+  } else if ($_POST['submit'] == 'Modify Trip') {
   }
 }
 
+function searchArrayOfObjects(array $arrayOfObjects, string $property, mixed $value) {
+  foreach ($arrayOfObjects as $object) {
+    if ($object->$property === $value) {
+      return $object;
+    }
+  }
+  return false;
+}
 
 ?>
 
@@ -86,12 +110,25 @@ if (isset($_POST['submit'])) {
   <hr>
   <h2>Modify trip info</h2>
   <h3>Trip to modify:</h3>
-  <select name="modifyTripTrip">
+  <select name="tripToModify">
     <option value="">Select a trip to modify...</option>
-    <?php foreach ($trips as $trip) { ?>
-      <option value="<?= $trip->id ?>"><?= $routes[$trip->route_id - 1]['origin'] ?> to <?= $routes[$trip->route_id - 1]['destination'] ?></option>
+    <?php foreach ($trips as $trip) {
+      $route = searchArrayOfObjects($routes, 'id', $trip->route_id); ?>
+      <option value="<?= $trip->id ?>"><?= $route->origin ?> to <?= $route->destination ?> ($<?= $route->price ?>) - <?= $trip->date ?> at <?= $trip->time ?></option>
     <?php } ?>
   </select>
+  <input type="submit" name="submit" value="Modify Trip">
+  <div <?php if (!isset($_POST['tripToModify']) || $_POST['tripToModify'] == '') { ?> hidden <?php } ?>>
+    <h4>Trip info:</h4>
+    <p>Origin: <?= echoTextField('modifyTripOrigin', 'origin'); ?></p>
+    <p>Destination: <?= echoTextField('modifyTripDestination', 'destination'); ?></p>
+    <p>Price: <?= echoPriceField('modifyTripPrice', 'price'); ?></p>
+    <p><?= echoDateField('modifyTripDate') ?> <?= echoTimeField('modifyTripTime') ?></p>
+    <h4>Aircraft info:</h4>
+    <p>Number of rows: <?= echoRowColumnNumberField('modifyTripNumberOfRows', 'rows', 90); ?></p>
+    <p>Number of columns: <?= echoRowColumnNumberField('modifyTripNumberOfColumns', 'columns', 10); ?></p>
+    <input type="submit" name="submit" value="Save">
+  </div>
   <hr>
   <h2>Edit passenger list/delete passengers</h2>
   <hr>
