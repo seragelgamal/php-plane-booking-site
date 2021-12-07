@@ -8,9 +8,8 @@ function pushErrorIfBlank(mixed $input, array &$errorArray, string $fieldName) {
   if ($input == '') {
     array_push($errorArray, "$fieldName is required");
     return true;
-  } else {
-    return false;
   }
+  return false;
 }
 // echoes a text field with the given POST field name and placeholder
 function echoTextField(string $POSTfieldName, string $placeholder = '') { ?>
