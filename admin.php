@@ -122,24 +122,40 @@ if (isset($_POST['submit'])) {
       $origin = formatNameOriginDestination($origin);
       $destination = formatNameOriginDestination($destination);
 
+      // save old trip
+      $oldTrip = searchArrayOfObjects($trips, 'id', $_POST['tripToModify']);
+
       // check if a route exists with the specified origin, destination, and price. if it doesn't, create it
       if (!($route = getRouteFromDatabase($pdo, 'routes', $origin, $destination, $_POST['modifyTripPrice']))) {
         // if no such route exists:
+        // make a new route with the specified origin, destination, and price
         $stmt = $pdo->prepare('INSERT INTO routes (origin, destination, price) VALUES (:origin, :destination, :price)');
         $stmt->execute(['origin' => $origin, 'destination' => $destination, 'price' => $_POST['modifyTripPrice']]);
         $feedbackMessage = $feedbackMessage . 'No route was found with the new origin, destination, and price - a new route was added<br>';
 
-        // get the route from the database now that it exists
+        // get the route object from the database now that the route exists
         $route = getRouteFromDatabase($pdo, 'routes', $origin, $destination, $_POST['modifyTripPrice']);
-
-        // add a trip to the new route with the specified date, time, and aircraft info
-        $stmt = $pdo->prepare('INSERT INTO flights (route_id, date, time, number_of_rows, number_of_columns, capacity) VALUES (:routeId, :date, :time, :numberOfRows, :numberOfColumns, :capacity)');
-        $stmt->execute(['routeId' => $route->id, 'date' => $_POST['modifyTripDate'], 'time' => $_POST['modifyTripTime'], 'numberOfRows' => $_POST['modifyTripNumberOfRows'], 'numberOfColumns' => $_POST['modifyTripNumberOfColumns'], 'capacity' => $_POST['modifyTripNumberOfRows'] * $_POST['modifyTripNumberOfColumns']]);
-      } else {
-        // if such a route exists:
-          
       }
 
+      // update the trip
+      $stmt = $pdo->prepare('UPDATE flights SET route_id = :routeId, date = :date, time = :time, number_of_rows = :numberOfRows, number_of_columns = :numberOfColumns, capacity = :capacity WHERE id = :id');
+      $stmt->execute(['routeId' => $route->id, 'date' => $_POST['modifyTripDate'], 'time' => $_POST['modifyTripTime'], 'numberOfRows' => $_POST['modifyTripNumberOfRows'], 'numberOfColumns' => $_POST['modifyTripNumberOfColumns'], 'capacity' => $_POST['modifyTripNumberOfRows'] * $_POST['modifyTripNumberOfColumns'], 'id' => $_POST['tripToModify']]);
+      $feedbackMessage = $feedbackMessage . "Trip successfully modified<br>";
+
+      // check if the old route now has 0 trips, and if so, delete it
+      $stmt = $pdo->prepare("SELECT * FROM flights WHERE route_id=:routeId");
+      $stmt->execute(['routeId' => $oldTrip->route_id]);
+      if ($stmt->rowCount() == 0) {
+        // delete the route
+        $stmt = $pdo->prepare("DELETE FROM routes WHERE id=:id");
+        $stmt->execute(['id' => $oldTrip->route_id]);
+      }
+
+      // if row/column number has decreased, delete all bookings for the trip
+      if ($_POST['modifyTripNumberOfRows'] < $oldTrip->number_of_rows || $_POST['modifyTripNumberOfColumns'] < $oldTrip->number_of_columns) {
+        $stmt = $pdo->prepare('DELETE FROM flight_bookings WHERE flight_id = :flightId');
+        $stmt->execute(['flightId' => $oldTrip->id]);
+      }
     }
   }
 }
@@ -158,6 +174,7 @@ function checkPOSTvalue(string $POSTfieldName, mixed $value) {
     return 'selected';
   }
 }
+
 
 ?>
 
@@ -192,6 +209,7 @@ function checkPOSTvalue(string $POSTfieldName, mixed $value) {
   <div <?php if (!isset($_POST['tripToModify']) || $_POST['tripToModify'] == '') { ?> hidden <?php } ?>>
     <h4>Trip info:</h4>
     <h5>A new route will be created if the changed trip's origin, destination, and price no longer match an existing route</h5>
+    <h5>If aircraft row or column number decreases, all current bookings for the trip will be deleted to avoid passengers having non-existent seat numbers</h5>
     <p>Origin: <?= echoTextField('modifyTripOrigin', 'origin'); ?></p>
     <p>Destination: <?= echoTextField('modifyTripDestination', 'destination'); ?></p>
     <p>Price: <?= echoPriceField('modifyTripPrice', 'price'); ?></p>

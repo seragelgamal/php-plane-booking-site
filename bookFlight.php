@@ -88,7 +88,7 @@ $seats = array_diff($seats, $seatsBooked);
   <p class="seatSelection">Select a seat from the following availablities:</p>
   <?php echoErrors($seatErrors); ?>
   <form action="<?= htmlspecialchars("{$_SERVER['PHP_SELF']}?flightId={$_GET['flightId']}") ?>" method="post">
-  <!-- put in a radio input for each seat, faded out if the seat is already booked -->
+    <!-- put in a radio input for each seat, faded out if the seat is already booked -->
     <?php for ($r = 1; $r < ($availabilityInfo->number_of_rows + 1); $r++) { ?>
       <p><?= $r ?></p>
       <div class="seatRow">
