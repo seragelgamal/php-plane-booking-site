@@ -3,7 +3,7 @@
 require('misc/header.php');
 
 // error arrays
-$addTripErrors = $modifyTripErrors = $editPassengersErrors = $blacklistErrors = [];
+$addTripErrors = $modifyTripErrors = $deleteTripErrors = $editPassengersErrors = $blacklistErrors = [];
 
 // global variables for trip modification section
 // $modifyTripOrigin = $modifyTripDestination = $modifyTripPrice = $modifyTripDate = $modifyTripTime = $modifyTripNumberOfRows = $modifyTripNumberOfColumns = '';
@@ -81,7 +81,7 @@ if (isset($_POST['submit'])) {
 
       $feedbackMessage = $feedbackMessage . 'Trip successfully added<br>';
 
-      unset($_POST);
+      $_POST = [];
     }
   } else if ($_POST['submit'] == 'Modify Trip') {
     if (!pushErrorIfBlank($_POST['tripToModify'], $modifyTripErrors, 'Trip selection')) {
@@ -149,17 +149,51 @@ if (isset($_POST['submit'])) {
         // delete the route
         $stmt = $pdo->prepare("DELETE FROM routes WHERE id=:id");
         $stmt->execute(['id' => $oldTrip->route_id]);
+
+        $feedbackMessage = $feedbackMessage . "The old trip's route no longer has any trips and has been deleted<br>";
       }
 
       // if row/column number has decreased, delete all bookings for the trip
       if ($_POST['modifyTripNumberOfRows'] < $oldTrip->number_of_rows || $_POST['modifyTripNumberOfColumns'] < $oldTrip->number_of_columns) {
         $stmt = $pdo->prepare('DELETE FROM flight_bookings WHERE flight_id = :flightId');
         $stmt->execute(['flightId' => $oldTrip->id]);
+
+        $feedbackMessage = $feedbackMessage . 'Row or column number was decreased - all bookings for the modified trip have been deleted';
       }
+
+      $_POST = [];
     }
+  } else if ($_POST['submit'] == 'Delete Trip') {
+    pushErrorIfBlank($_POST['tripToDelete'], $deleteTripErrors, 'Trip selection');
+  } else if ($_POST['submit'] == 'Cancel') {
+
+    $_POST = [];
+  } else if ($_POST['submit'] == 'Yes, permanently delete this trip') {
+    // get the trip object
+    $trip = searchArrayOfObjects($trips, 'id', $_POST['tripToDelete']);
+
+    // delete the trip
+    $stmt = $pdo->prepare('DELETE FROM flights WHERE id = :id');
+    $stmt->execute(['id' => $trip->id]);
+
+    $feedbackMessage = $feedbackMessage . 'Trip successfully deleted';
+
+    // check if the trip's route now has 0 trips, and delete it if it does
+    $stmt = $pdo->prepare('SELECT * FROM flights WHERE route_id = :routeId');
+    $stmt->execute(['routeId' => $trip->route_id]);
+    if ($stmt->rowCount() == 0) {
+      // delete the route
+      $stmt = $pdo->prepare('DELETE FROM routes WHERE id = :id');
+      $stmt->execute(['id' => $trip->route_id]);
+
+      $feedbackMessage = $feedbackMessage . "The deleted trip's route no longer has any trips and has been deleted";
+    }
+
+    $_POST = [];
   }
 }
 
+// returns the object from an array of similar objects whose specified property is a given value
 function searchArrayOfObjects(array $arrayOfObjects, string $property, mixed $value) {
   foreach ($arrayOfObjects as $object) {
     if ($object->$property === $value) {
@@ -169,12 +203,14 @@ function searchArrayOfObjects(array $arrayOfObjects, string $property, mixed $va
   return false;
 }
 
+// to be used inside the brackets of an input element: echoes 'selected' if the POST value matches the value of the input elemented
 function checkPOSTvalue(string $POSTfieldName, mixed $value) {
   if (isset($_POST[$POSTfieldName]) && $_POST[$POSTfieldName] == $value) {
     return 'selected';
   }
 }
 
+var_dump($_POST);
 
 ?>
 
@@ -194,18 +230,17 @@ function checkPOSTvalue(string $POSTfieldName, mixed $value) {
   <p>Number of columns: <?= echoRowColumnNumberField('addTripNumberOfColumns', 'columns', 10); ?></p>
   <input type="submit" name="submit" value="Add Trip">
   <hr>
-  <h2>Modify/delete trip</h2>
+  <h2>Modify trip</h2>
   <?= echoErrors($modifyTripErrors) ?>
   <h3>Select a trip:</h3>
   <select name="tripToModify">
-    <option value="">Select a trip to modify/delete...</option>
+    <option value="">Select a trip to modify</option>
     <?php foreach ($trips as $trip) {
       $route = searchArrayOfObjects($routes, 'id', $trip->route_id); ?>
       <option value="<?= $trip->id ?>" <?= checkPOSTvalue('tripToModify', $trip->id) ?>><?= $route->origin ?> to <?= $route->destination ?> ($<?= $route->price ?>) - <?= $trip->date ?> at <?= $trip->time ?></option>
     <?php } ?>
   </select>
   <input type="submit" name="submit" value="Modify Trip">
-  <input type="submit" name="submit" value="Delete Trip">
   <div <?php if (!isset($_POST['tripToModify']) || $_POST['tripToModify'] == '') { ?> hidden <?php } ?>>
     <h4>Trip info:</h4>
     <h5>A new route will be created if the changed trip's origin, destination, and price no longer match an existing route</h5>
@@ -218,6 +253,23 @@ function checkPOSTvalue(string $POSTfieldName, mixed $value) {
     <p>Number of rows: <?= echoRowColumnNumberField('modifyTripNumberOfRows', 'rows', 90); ?></p>
     <p>Number of columns: <?= echoRowColumnNumberField('modifyTripNumberOfColumns', 'columns', 10); ?></p>
     <input type="submit" name="submit" value="Save Changes">
+  </div>
+  <hr>
+  <h2>Delete trip</h2>
+  <?= echoErrors($deleteTripErrors) ?>
+  <h3>Select a trip:</h3>
+  <select name="tripToDelete">
+    <option value="">Select a trip to delete</option>
+    <?php foreach ($trips as $trip) {
+      $route = searchArrayOfObjects($routes, 'id', $trip->route_id); ?>
+      <option value="<?= $trip->id ?>" <?= checkPOSTvalue('tripToDelete', $trip->id) ?>><?= $route->origin ?> to <?= $route->destination ?> ($<?= $route->price ?>) - <?= $trip->date ?> at <?= $trip->time ?></option>
+    <?php } ?>
+  </select>
+  <input type="submit" name="submit" value="Delete Trip">
+  <div <?php if (!isset($_POST['tripToDelete']) || $_POST['tripToDelete'] == '') { ?> hidden <?php } ?>>
+    <h4>Are you sure you want to delete this trip? <em>This is permanent</em></h4>
+    <input type="submit" name="submit" value="Cancel">
+    <input type="submit" name="submit" value="Yes, permanently delete this trip">
   </div>
   <hr>
   <h2>Edit passenger list/delete passengers</h2>
