@@ -14,7 +14,7 @@ function pushErrorIfBlank(mixed $input, array &$errorArray, string $fieldName) {
 // echoes a text field with the given POST field name and placeholder
 function echoTextField(string $POSTfieldName, string $placeholder = '') { ?>
   <input type="text" name="<?= $POSTfieldName ?>" placeholder="<?= $placeholder ?>" <?php if (isset($_POST[$POSTfieldName])) { ?> value="<?= $_POST[$POSTfieldName] ?>" <?php } ?>>
-<?php }
+  <?php }
 // returns the properly-formatted version of a user-entered name
 function formatNameOriginDestination(string $nameVariable) {
   // take out spaces from the start and end of the name if they exist
@@ -41,6 +41,38 @@ function sortElementsByProperty(array &$array, string $property) {
       }
     }
   }
+}
+function echoSeatSelector(object $flight, array $bookings, mixed $row, string $column) {
+  // set global array '$seats' to store all possible seats
+  $columnLegend = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K'];
+  $seats = [];
+  for ($seatRow = 1; $seatRow < ($flight->number_of_rows + 1); $seatRow++) {
+    for ($seatColumn = 0; $seatColumn < 6; $seatColumn++) {
+      array_push($seats, $seatRow . $columnLegend[$seatColumn]);
+    }
+  }
+  // set global array '$seatsBooked' to store the seats that are already booked
+  $seatsBooked = [];
+  foreach ($bookings as $booking) {
+    array_push($seatsBooked, $booking->seat_row . $booking->seat_column);
+  }
+  // take out already-booked seats from the $seats array
+  $seats = array_diff($seats, $seatsBooked);
+
+  for ($r = 1; $r < ($flight->number_of_rows + 1); $r++) { ?>
+    <p><?= $r ?></p>
+    <div class="seatRow">
+      <div class="seatColumn">
+        <?php for ($c = 0; $c < ($flight->number_of_columns); $c++) { ?>
+          <input type="radio" name="seat" value="<?= "$r{$columnLegend[$c]}" ?>" <?php foreach ($bookings as $booking) {
+                                                                                    if ("$r{$columnLegend[$c]}" == "{$booking->seat_row}{$booking->seat_column}") { ?> disabled <?php }
+                                                                                                                                                                            }
+                                                                                                                                                                            if ("$r{$columnLegend[$c]}" == "$row$column") { ?> checked <?php } ?>>
+          <?= $columnLegend[$c] ?>
+        <?php } ?>
+      </div>
+    </div>
+  <?php }
 }
 
 // document-specific functions:

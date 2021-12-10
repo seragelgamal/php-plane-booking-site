@@ -3,13 +3,14 @@
 require('misc/header.php');
 
 // error arrays
-$addTripErrors = $modifyTripErrors = $deleteTripErrors = $editPassengersErrors = $blacklistErrors = [];
+$addTripErrors = $modifyTripErrors = $deleteTripErrors = $modifyBookingsErrors = $blacklistErrors = [];
 
 // global variables for trip modification section
 // $modifyTripOrigin = $modifyTripDestination = $modifyTripPrice = $modifyTripDate = $modifyTripTime = $modifyTripNumberOfRows = $modifyTripNumberOfColumns = '';
 // $modifyTripPOSTfieldNames = ['modifyTripOrigin', 'modifyTripDestination', 'modifyTripPrice', 'modifyTripDate']
 
 $feedbackMessage = '';
+$bookings = [];
 
 // get an array of all the routes
 $stmt = $pdo->query('SELECT * FROM routes');
@@ -190,6 +191,21 @@ if (isset($_POST['submit'])) {
     }
 
     $_POST = [];
+  } else if ($_POST['submit'] == 'Modify Bookings') {
+    if (!pushErrorIfBlank($_POST['passengerListToModify'], $modifyBookingsErrors, 'Trip selection')) {
+      // get bookings for the selected flight
+      $stmt = $pdo->prepare("SELECT * FROM flight_bookings WHERE flight_id = :flightId");
+      $stmt->execute(['flightId' => $_POST['passengerListToModify']]);
+      $bookings = $stmt->fetchAll();
+    }
+  } else if ($_POST['submit'] == 'Modify Booking') {
+    if (!pushErrorIfBlank($_POST['bookingToModify'], $modifyBookingsErrors, 'Booking selection')) {
+      $booking = searchArrayOfObjects($bookings, 'id', $_POST['bookingToModify']);
+      $_POST['modifyBookingFirstName'] = $booking->first_name;
+      $_POST['modifyBookingLastName'] = $booking->last_name;
+      $_POST['modifyBookingSeatRow'] = $booking->seat_row;
+      $_POST['modifyBookingSeatColumn'] = $booking->seat_column;
+    }
   }
 }
 
@@ -210,7 +226,6 @@ function checkPOSTvalue(string $POSTfieldName, mixed $value) {
   }
 }
 
-var_dump($_POST);
 
 ?>
 
@@ -234,7 +249,7 @@ var_dump($_POST);
   <?= echoErrors($modifyTripErrors) ?>
   <h3>Select a trip:</h3>
   <select name="tripToModify">
-    <option value="">Select a trip to modify</option>
+    <option value="">Select a trip to modify...</option>
     <?php foreach ($trips as $trip) {
       $route = searchArrayOfObjects($routes, 'id', $trip->route_id); ?>
       <option value="<?= $trip->id ?>" <?= checkPOSTvalue('tripToModify', $trip->id) ?>><?= $route->origin ?> to <?= $route->destination ?> ($<?= $route->price ?>) - <?= $trip->date ?> at <?= $trip->time ?></option>
@@ -259,7 +274,7 @@ var_dump($_POST);
   <?= echoErrors($deleteTripErrors) ?>
   <h3>Select a trip:</h3>
   <select name="tripToDelete">
-    <option value="">Select a trip to delete</option>
+    <option value="">Select a trip to delete...</option>
     <?php foreach ($trips as $trip) {
       $route = searchArrayOfObjects($routes, 'id', $trip->route_id); ?>
       <option value="<?= $trip->id ?>" <?= checkPOSTvalue('tripToDelete', $trip->id) ?>><?= $route->origin ?> to <?= $route->destination ?> ($<?= $route->price ?>) - <?= $trip->date ?> at <?= $trip->time ?></option>
@@ -272,7 +287,35 @@ var_dump($_POST);
     <input type="submit" name="submit" value="Yes, permanently delete this trip">
   </div>
   <hr>
-  <h2>Edit passenger list/delete passengers</h2>
+  <h2>Modify/delete bookings</h2>
+  <?= echoErrors($modifyBookingsErrors) ?>
+  <h3>Select a trip:</h3>
+  <select name="passengerListToModify">
+    <option value="">Select a trip to modify its passenger list...</option>
+    <?php foreach ($trips as $trip) {
+      $route = searchArrayOfObjects($routes, 'id', $trip->route_id); ?>
+      <option value="<?= $trip->id ?>" <?= checkPOSTvalue('passengerListToModify', $trip->id) ?>><?= $route->origin ?> to <?= $route->destination ?> ($<?= $route->price ?>) - <?= $trip->date ?> at <?= $trip->time ?></option>
+    <?php } ?>
+  </select>
+  <input type="submit" name="submit" value="Modify Bookings">
+  <div <?php if (!isset($_POST['passengerListToModify']) || $_POST['passengerListToModify'] == '') { ?> hidden <?php } ?>>
+    <!-- booking selection -->
+    <h4>Select a booking:</h4>
+    <select name="bookingToModify">
+      <option value="">Select a booking to modify...</option>
+      <?php foreach ($bookings as $booking) { ?>
+        <option value="<?= $booking->id ?>"><?= $booking->first_name ?> <?= $booking->last_name ?> - seat <?= $booking->seat_row ?><?= $booking->seat_column ?></option>
+      <?php } ?>
+    </select>
+    <input type="submit" name="submit" value="Modify Booking">
+    <div <?php if (!isset($_POST['bookingToModify']) || $_POST['bookingToModify'] == '') { ?> hidden <?php } ?>>
+      <h5>Booking info:</h5>
+      <p>First name: <?= echoTextField('modifyBookingFirstName', 'First name') ?></p>
+      <p>Last name: <?= echoTextField('modifyBookingLastName', 'Last name') ?></p>
+      <p>Seat:</p>
+      <?= echoSeatSelector(searchArrayOfObjects($trips, 'id', $_POST['passengerListToModify']), $bookings, searchArrayOfObjects($bookings, 'id', $_POST['bookingToModify'])->seat_row, searchArrayOfObjects($bookings, 'id', $_POST['bookingToModify'])->seat_column) ?>
+    </div>
+  </div>
   <hr>
   <h2>Edit blacklist</h2>
 </form>

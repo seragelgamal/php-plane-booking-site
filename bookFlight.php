@@ -69,7 +69,7 @@ if (isset($_GET['flightId'])) {
 // set global array '$seats' to store all possible seats
 $columnLegend = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K'];
 $seats = [];
-for ($seatRow = 1; $seatRow < 31; $seatRow++) {
+for ($seatRow = 1; $seatRow < ($availabilityInfo->number_of_rows + 1); $seatRow++) {
   for ($seatColumn = 0; $seatColumn < 6; $seatColumn++) {
     array_push($seats, $seatRow . $columnLegend[$seatColumn]);
   }
@@ -81,6 +81,9 @@ foreach ($bookings as $booking) {
 }
 // take out already-booked seats from the $seats array
 $seats = array_diff($seats, $seatsBooked);
+
+
+
 ?>
 
 <!-- seat selector: -->
@@ -89,20 +92,7 @@ $seats = array_diff($seats, $seatsBooked);
   <?php echoErrors($seatErrors); ?>
   <form action="<?= htmlspecialchars("{$_SERVER['PHP_SELF']}?flightId={$_GET['flightId']}") ?>" method="post">
     <!-- put in a radio input for each seat, faded out if the seat is already booked -->
-    <?php for ($r = 1; $r < ($availabilityInfo->number_of_rows + 1); $r++) { ?>
-      <p><?= $r ?></p>
-      <div class="seatRow">
-        <div class="seatColumn">
-          <?php for ($c = 0; $c < ($availabilityInfo->number_of_columns); $c++) { ?>
-            <input type="radio" name="seat" value="<?= "$r{$columnLegend[$c]}" ?>" <?php foreach ($bookings as $booking) {
-                                                                                      if ("$r{$columnLegend[$c]}" == "{$booking->seat_row}{$booking->seat_column}") { ?> disabled <?php }
-                                                                                                                                                                              }
-                                                                                                                                                                              if ("$r{$columnLegend[$c]}" == "$row$column") { ?> checked <?php } ?>>
-            <?= $columnLegend[$c] ?>
-          <?php } ?>
-        </div>
-      </div>
-    <?php } ?>
+    <?= echoSeatSelector($availabilityInfo, $bookings, $row, $column) ?>
     <hr>
     <!-- personal info input: -->
     <?php echoNameField('First name', 'firstName', $firstNameErrors); ?>
