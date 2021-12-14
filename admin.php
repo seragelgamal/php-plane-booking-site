@@ -9,7 +9,7 @@ $addTripErrors = $modifyTripErrors = $deleteTripErrors = $modifyBookingsErrors =
 // $modifyTripOrigin = $modifyTripDestination = $modifyTripPrice = $modifyTripDate = $modifyTripTime = $modifyTripNumberOfRows = $modifyTripNumberOfColumns = '';
 // $modifyTripPOSTfieldNames = ['modifyTripOrigin', 'modifyTripDestination', 'modifyTripPrice', 'modifyTripDate']
 
-$feedbackMessage = '';
+$feedbackMessage = $booking = '';
 $bookings = [];
 
 // get an array of all the routes
@@ -200,12 +200,23 @@ if (isset($_POST['submit'])) {
     }
   } else if ($_POST['submit'] == 'Modify Booking') {
     if (!pushErrorIfBlank($_POST['bookingToModify'], $modifyBookingsErrors, 'Booking selection')) {
+      // get bookings for the selected flight
+      $stmt = $pdo->prepare("SELECT * FROM flight_bookings WHERE flight_id = :flightId");
+      $stmt->execute(['flightId' => $_POST['passengerListToModify']]);
+      $bookings = $stmt->fetchAll();
+
       $booking = searchArrayOfObjects($bookings, 'id', $_POST['bookingToModify']);
+      var_dump($booking);
       $_POST['modifyBookingFirstName'] = $booking->first_name;
       $_POST['modifyBookingLastName'] = $booking->last_name;
       $_POST['modifyBookingSeatRow'] = $booking->seat_row;
       $_POST['modifyBookingSeatColumn'] = $booking->seat_column;
     }
+  } else if ($_POST['submit'] == 'Update Booking') {
+    // separate seat row and column and store them
+    $seat = strlen($_POST['modifyBookingSeat']) > 2 ? chunk_split($_POST['seat'], 2, ' ') : chunk_split($_POST['seat'], 1, ' ');
+    $row = strtok($seat, ' ');
+    $column = strtok(' ');
   }
 }
 
@@ -226,6 +237,7 @@ function checkPOSTvalue(string $POSTfieldName, mixed $value) {
   }
 }
 
+var_dump($bookings);
 
 ?>
 
@@ -304,7 +316,7 @@ function checkPOSTvalue(string $POSTfieldName, mixed $value) {
     <select name="bookingToModify">
       <option value="">Select a booking to modify...</option>
       <?php foreach ($bookings as $booking) { ?>
-        <option value="<?= $booking->id ?>"><?= $booking->first_name ?> <?= $booking->last_name ?> - seat <?= $booking->seat_row ?><?= $booking->seat_column ?></option>
+        <option value="<?= $booking->id ?>" <?= checkPOSTvalue('bookingToModify', $booking->id) ?>><?= $booking->first_name ?> <?= $booking->last_name ?> - seat <?= $booking->seat_row ?><?= $booking->seat_column ?></option>
       <?php } ?>
     </select>
     <input type="submit" name="submit" value="Modify Booking">
@@ -312,8 +324,8 @@ function checkPOSTvalue(string $POSTfieldName, mixed $value) {
       <h5>Booking info:</h5>
       <p>First name: <?= echoTextField('modifyBookingFirstName', 'First name') ?></p>
       <p>Last name: <?= echoTextField('modifyBookingLastName', 'Last name') ?></p>
-      <p>Seat:</p>
-      <?= echoSeatSelector(searchArrayOfObjects($trips, 'id', $_POST['passengerListToModify']), $bookings, searchArrayOfObjects($bookings, 'id', $_POST['bookingToModify'])->seat_row, searchArrayOfObjects($bookings, 'id', $_POST['bookingToModify'])->seat_column) ?>
+      <p>Seat: <?= echoSeatSelector(searchArrayOfObjects($trips, 'id', $_POST['passengerListToModify']), $bookings, $_POST['modifyBookingSeatRow'], $_POST['modifyBookingSeatColumn'], false, searchArrayOfObjects($bookings, 'id', $_POST['bookingToModify'])) ?></p>
+      <input type="submit" name="submit" value="Update Booking">
     </div>
   </div>
   <hr>

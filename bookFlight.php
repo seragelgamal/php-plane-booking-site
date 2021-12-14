@@ -82,8 +82,6 @@ foreach ($bookings as $booking) {
 // take out already-booked seats from the $seats array
 $seats = array_diff($seats, $seatsBooked);
 
-
-
 ?>
 
 <!-- seat selector: -->

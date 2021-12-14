@@ -42,7 +42,7 @@ function sortElementsByProperty(array &$array, string $property) {
     }
   }
 }
-function echoSeatSelector(object $flight, array $bookings, mixed $row, string $column) {
+function echoSeatSelector(object $flight, array $bookings, mixed $row, string $column, bool $flightBookingPage = true, object $bookingToModify = NULL) {
   // set global array '$seats' to store all possible seats
   $columnLegend = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K'];
   $seats = [];
@@ -64,10 +64,16 @@ function echoSeatSelector(object $flight, array $bookings, mixed $row, string $c
     <div class="seatRow">
       <div class="seatColumn">
         <?php for ($c = 0; $c < ($flight->number_of_columns); $c++) { ?>
-          <input type="radio" name="seat" value="<?= "$r{$columnLegend[$c]}" ?>" <?php foreach ($bookings as $booking) {
-                                                                                    if ("$r{$columnLegend[$c]}" == "{$booking->seat_row}{$booking->seat_column}") { ?> disabled <?php }
-                                                                                                                                                                            }
-                                                                                                                                                                            if ("$r{$columnLegend[$c]}" == "$row$column") { ?> checked <?php } ?>>
+          <input type="radio" name="seat" value="<?= "$r{$columnLegend[$c]}" ?>" <?php if ($flightBookingPage) {
+                                                                                    foreach ($bookings as $booking) {
+                                                                                      if ("$r{$columnLegend[$c]}" == "{$booking->seat_row}{$booking->seat_column}") { ?> disabled <?php }
+                                                                                                                                                                              }
+                                                                                                                                                                            } else {
+                                                                                                                                                                              foreach ($bookings as $booking) {
+                                                                                                                                                                                if ("$r{$columnLegend[$c]}" == "{$booking->seat_row}{$booking->seat_column}" && "{$bookingToModify->seat_row}{$bookingToModify->seat_column}" != "$r{$columnLegend[$c]}") { ?> disabled <?php }
+                                                                                                                                                                                                                                                                      }
+                                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                                    if ("$r{$columnLegend[$c]}" == "$row$column") { ?> checked <?php } ?>>
           <?= $columnLegend[$c] ?>
         <?php } ?>
       </div>
