@@ -42,7 +42,7 @@ function sortElementsByProperty(array &$array, string $property) {
     }
   }
 }
-function echoSeatSelector(object $flight, array $bookings, mixed $row, string $column, bool $flightBookingPage = true, object $bookingToModify = NULL) {
+function echoSeatSelector(object $flight, array $bookings, string $POSTfieldName, mixed $row, string $column, bool $flightBookingPage = true, object $bookingToModify = NULL) {
   // set global array '$seats' to store all possible seats
   $columnLegend = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K'];
   $seats = [];
@@ -64,7 +64,7 @@ function echoSeatSelector(object $flight, array $bookings, mixed $row, string $c
     <div class="seatRow">
       <div class="seatColumn">
         <?php for ($c = 0; $c < ($flight->number_of_columns); $c++) { ?>
-          <input type="radio" name="seat" value="<?= "$r{$columnLegend[$c]}" ?>" <?php if ($flightBookingPage) {
+          <input type="radio" name="<?= $POSTfieldName ?>" value="<?= "$r{$columnLegend[$c]}" ?>" <?php if ($flightBookingPage) {
                                                                                     foreach ($bookings as $booking) {
                                                                                       if ("$r{$columnLegend[$c]}" == "{$booking->seat_row}{$booking->seat_column}") { ?> disabled <?php }
                                                                                                                                                                               }

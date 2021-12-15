@@ -90,7 +90,7 @@ $seats = array_diff($seats, $seatsBooked);
   <?php echoErrors($seatErrors); ?>
   <form action="<?= htmlspecialchars("{$_SERVER['PHP_SELF']}?flightId={$_GET['flightId']}") ?>" method="post">
     <!-- put in a radio input for each seat, faded out if the seat is already booked -->
-    <?= echoSeatSelector($availabilityInfo, $bookings, $row, $column) ?>
+    <?= echoSeatSelector($availabilityInfo, $bookings, 'seat', $row, $column) ?>
     <hr>
     <!-- personal info input: -->
     <?php echoNameField('First name', 'firstName', $firstNameErrors); ?>

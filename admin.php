@@ -213,10 +213,42 @@ if (isset($_POST['submit'])) {
       $_POST['modifyBookingSeatColumn'] = $booking->seat_column;
     }
   } else if ($_POST['submit'] == 'Update Booking') {
+    // get bookings for the selected flight
+    $stmt = $pdo->prepare("SELECT * FROM flight_bookings WHERE flight_id = :flightId");
+    $stmt->execute(['flightId' => $_POST['passengerListToModify']]);
+    $bookings = $stmt->fetchAll();
+
+    pushErrorIfBlank($_POST['modifyBookingFirstName'], $modifyBookingsErrors, 'First name');
+    pushErrorIfBlank($_POST['modifyBookingLastName'], $modifyBookingsErrors, 'Last name');
+
+    $firstName = $_POST['modifyBookingFirstName'];
+    $lastName = $_POST['modifyBookingLastName'];
+    
+    $modifyBookingsErrors = array_merge($modifyBookingsErrors, nameErrorArray($firstName, 'First name'), nameErrorArray($lastName, 'Last name'));
+    
     // separate seat row and column and store them
-    $seat = strlen($_POST['modifyBookingSeat']) > 2 ? chunk_split($_POST['seat'], 2, ' ') : chunk_split($_POST['seat'], 1, ' ');
+    $seat = strlen($_POST['modifyBookingSeat']) > 2 ? chunk_split($_POST['modifyBookingSeat'], 2, ' ') : chunk_split($_POST['modifyBookingSeat'], 1, ' ');
     $row = strtok($seat, ' ');
     $column = strtok(' ');
+
+    if (sizeof($modifyBookingsErrors) == 0) {
+      $firstName = formatNameOriginDestination($firstName);
+      $lastName = formatNameOriginDestination($lastName);
+
+      $stmt = $pdo->prepare("UPDATE flight_bookings SET first_name = :firstName, last_name = :lastName, seat_row = :seatRow, seat_column = :seatColumn WHERE id = :id");
+      $stmt->execute(['firstName' => $firstName, 'lastName' => $lastName, 'seatRow' => $row, 'seatColumn' => $column, 'id' => $_POST['bookingToModify']]);
+
+      $feedbackMessage = $feedbackMessage . 'Booking successfully modified';
+
+      $_POST = [];
+    } else {
+      $_POST['modifyBookingSeatRow'] = $row;
+      $_POST['modifyBookingSeatColumn'] = $column;
+    }
+
+    echo("Split seat: $seat");
+    echo("Row: $row");
+    echo("Column: $column");
   }
 }
 
@@ -324,7 +356,9 @@ var_dump($bookings);
       <h5>Booking info:</h5>
       <p>First name: <?= echoTextField('modifyBookingFirstName', 'First name') ?></p>
       <p>Last name: <?= echoTextField('modifyBookingLastName', 'Last name') ?></p>
-      <p>Seat: <?= echoSeatSelector(searchArrayOfObjects($trips, 'id', $_POST['passengerListToModify']), $bookings, $_POST['modifyBookingSeatRow'], $_POST['modifyBookingSeatColumn'], false, searchArrayOfObjects($bookings, 'id', $_POST['bookingToModify'])) ?></p>
+      <p>Seat: <?= echoSeatSelector(searchArrayOfObjects($trips, 'id', $_POST['passengerListToModify']), $bookings, 'modifyBookingSeat', $_POST['modifyBookingSeatRow'], $_POST['modifyBookingSeatColumn'], false, searchArrayOfObjects($bookings, 'id', $_POST['bookingToModify'])) ?></p>
+      <!-- <input type="hidden" name="modifyBookingSeatRow" value="<?= $_POST['modifyBookingSeatRow'] ?>">
+      <input type="hidden" name="modifyBookingSeatColumn" value="<?= $_POST['modifyBookingSeatColumn'] ?>"> -->
       <input type="submit" name="submit" value="Update Booking">
     </div>
   </div>
