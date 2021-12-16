@@ -159,7 +159,7 @@ if (isset($_POST['submit'])) {
         $stmt = $pdo->prepare('DELETE FROM flight_bookings WHERE flight_id = :flightId');
         $stmt->execute(['flightId' => $oldTrip->id]);
 
-        $feedbackMessage = $feedbackMessage . 'Row or column number was decreased - all bookings for the modified trip have been deleted';
+        $feedbackMessage = $feedbackMessage . 'Row or column number was decreased - all bookings for the modified trip have been deleted<br>';
       }
 
       $_POST = [];
@@ -167,7 +167,6 @@ if (isset($_POST['submit'])) {
   } else if ($_POST['submit'] == 'Delete Trip') {
     pushErrorIfBlank($_POST['tripToDelete'], $deleteTripErrors, 'Trip selection');
   } else if ($_POST['submit'] == 'Cancel') {
-
     $_POST = [];
   } else if ($_POST['submit'] == 'Yes, permanently delete this trip') {
     // get the trip object
@@ -177,7 +176,7 @@ if (isset($_POST['submit'])) {
     $stmt = $pdo->prepare('DELETE FROM flights WHERE id = :id');
     $stmt->execute(['id' => $trip->id]);
 
-    $feedbackMessage = $feedbackMessage . 'Trip successfully deleted';
+    $feedbackMessage = $feedbackMessage . 'Trip successfully deleted<br>';
 
     // check if the trip's route now has 0 trips, and delete it if it does
     $stmt = $pdo->prepare('SELECT * FROM flights WHERE route_id = :routeId');
@@ -187,7 +186,7 @@ if (isset($_POST['submit'])) {
       $stmt = $pdo->prepare('DELETE FROM routes WHERE id = :id');
       $stmt->execute(['id' => $trip->route_id]);
 
-      $feedbackMessage = $feedbackMessage . "The deleted trip's route no longer has any trips and has been deleted";
+      $feedbackMessage = $feedbackMessage . "The deleted trip's route no longer has any trips and has been deleted<br>";
     }
 
     $_POST = [];
@@ -206,12 +205,34 @@ if (isset($_POST['submit'])) {
       $bookings = $stmt->fetchAll();
 
       $booking = searchArrayOfObjects($bookings, 'id', $_POST['bookingToModify']);
-      var_dump($booking);
       $_POST['modifyBookingFirstName'] = $booking->first_name;
       $_POST['modifyBookingLastName'] = $booking->last_name;
       $_POST['modifyBookingSeatRow'] = $booking->seat_row;
       $_POST['modifyBookingSeatColumn'] = $booking->seat_column;
     }
+  } else if ($_POST['submit'] == 'Delete Booking') {
+    if (!pushErrorIfBlank($_POST['bookingToModify'], $modifyBookingsErrors, 'Booking selection')) {
+      // get bookings for the selected flight
+      $stmt = $pdo->prepare("SELECT * FROM flight_bookings WHERE flight_id = :flightId");
+      $stmt->execute(['flightId' => $_POST['passengerListToModify']]);
+      $bookings = $stmt->fetchAll();
+
+      $booking = searchArrayOfObjects($bookings, 'id', $_POST['bookingToModify']);
+    }
+  } else if ($_POST['submit'] == 'Yes, permanently delete this booking') {
+    // get bookings for the selected flight
+    $stmt = $pdo->prepare("SELECT * FROM flight_bookings WHERE flight_id = :flightId");
+    $stmt->execute(['flightId' => $_POST['passengerListToModify']]);
+    $bookings = $stmt->fetchAll();
+
+    $booking = searchArrayOfObjects($bookings, 'id', $_POST['bookingToModify']);
+
+    $stmt = $pdo->prepare("DELETE FROM flight_bookings WHERE id = :id");
+    $stmt->execute(['id' => $booking->id]);
+
+    $feedbackMessage = $feedbackMessage . 'Booking successfully deleted<br>';
+
+    $_POST = [];
   } else if ($_POST['submit'] == 'Update Booking') {
     // get bookings for the selected flight
     $stmt = $pdo->prepare("SELECT * FROM flight_bookings WHERE flight_id = :flightId");
@@ -223,9 +244,9 @@ if (isset($_POST['submit'])) {
 
     $firstName = $_POST['modifyBookingFirstName'];
     $lastName = $_POST['modifyBookingLastName'];
-    
+
     $modifyBookingsErrors = array_merge($modifyBookingsErrors, nameErrorArray($firstName, 'First name'), nameErrorArray($lastName, 'Last name'));
-    
+
     // separate seat row and column and store them
     $seat = strlen($_POST['modifyBookingSeat']) > 2 ? chunk_split($_POST['modifyBookingSeat'], 2, ' ') : chunk_split($_POST['modifyBookingSeat'], 1, ' ');
     $row = strtok($seat, ' ');
@@ -238,17 +259,16 @@ if (isset($_POST['submit'])) {
       $stmt = $pdo->prepare("UPDATE flight_bookings SET first_name = :firstName, last_name = :lastName, seat_row = :seatRow, seat_column = :seatColumn WHERE id = :id");
       $stmt->execute(['firstName' => $firstName, 'lastName' => $lastName, 'seatRow' => $row, 'seatColumn' => $column, 'id' => $_POST['bookingToModify']]);
 
-      $feedbackMessage = $feedbackMessage . 'Booking successfully modified';
+      $feedbackMessage = $feedbackMessage . 'Booking successfully modified<br>';
 
       $_POST = [];
     } else {
       $_POST['modifyBookingSeatRow'] = $row;
       $_POST['modifyBookingSeatColumn'] = $column;
     }
-
-    echo("Split seat: $seat");
-    echo("Row: $row");
-    echo("Column: $column");
+  } else if ($_POST['submit'] == 'Blacklist') {
+    pushErrorIfBlank($_POST['addToBlacklistFirstName'], $modifyBookingsErrors, 'First name');
+    pushErrorIfBlank($_POST['modifyBookingLastName'], $modifyBookingsErrors, 'Last name');
   }
 }
 
@@ -262,14 +282,12 @@ function searchArrayOfObjects(array $arrayOfObjects, string $property, mixed $va
   return false;
 }
 
-// to be used inside the brackets of an input element: echoes 'selected' if the POST value matches the value of the input elemented
+// to be used inside the brackets of an input element: echoes 'selected' if the POST value matches the value of the inputted element
 function checkPOSTvalue(string $POSTfieldName, mixed $value) {
   if (isset($_POST[$POSTfieldName]) && $_POST[$POSTfieldName] == $value) {
     return 'selected';
   }
 }
-
-var_dump($bookings);
 
 ?>
 
@@ -344,27 +362,46 @@ var_dump($bookings);
   <input type="submit" name="submit" value="Modify Bookings">
   <div <?php if (!isset($_POST['passengerListToModify']) || $_POST['passengerListToModify'] == '') { ?> hidden <?php } ?>>
     <!-- booking selection -->
-    <h4>Select a booking:</h4>
+    <h4>Select a booking from the selected trip:</h4>
     <select name="bookingToModify">
-      <option value="">Select a booking to modify...</option>
+      <option value="">Select a booking to modify/delete...</option>
       <?php foreach ($bookings as $booking) { ?>
         <option value="<?= $booking->id ?>" <?= checkPOSTvalue('bookingToModify', $booking->id) ?>><?= $booking->first_name ?> <?= $booking->last_name ?> - seat <?= $booking->seat_row ?><?= $booking->seat_column ?></option>
       <?php } ?>
     </select>
     <input type="submit" name="submit" value="Modify Booking">
-    <div <?php if (!isset($_POST['bookingToModify']) || $_POST['bookingToModify'] == '') { ?> hidden <?php } ?>>
+    <input type="submit" name="submit" value="Delete Booking">
+    <div <?php if (!isset($_POST['bookingToModify']) || $_POST['bookingToModify'] == '' || $_POST['submit'] == 'Delete Booking') { ?> hidden <?php } ?>>
       <h5>Booking info:</h5>
       <p>First name: <?= echoTextField('modifyBookingFirstName', 'First name') ?></p>
       <p>Last name: <?= echoTextField('modifyBookingLastName', 'Last name') ?></p>
-      <p>Seat: <?= echoSeatSelector(searchArrayOfObjects($trips, 'id', $_POST['passengerListToModify']), $bookings, 'modifyBookingSeat', $_POST['modifyBookingSeatRow'], $_POST['modifyBookingSeatColumn'], false, searchArrayOfObjects($bookings, 'id', $_POST['bookingToModify'])) ?></p>
-      <!-- <input type="hidden" name="modifyBookingSeatRow" value="<?= $_POST['modifyBookingSeatRow'] ?>">
-      <input type="hidden" name="modifyBookingSeatColumn" value="<?= $_POST['modifyBookingSeatColumn'] ?>"> -->
+      <p>Seat: <?php if ($_POST['submit'] == 'Modify Booking' || $_POST['submit'] == 'Update Booking') {
+                  echoSeatSelector(searchArrayOfObjects($trips, 'id', $_POST['passengerListToModify']), $bookings, 'modifyBookingSeat', $_POST['modifyBookingSeatRow'], $_POST['modifyBookingSeatColumn'], false, searchArrayOfObjects($bookings, 'id', $_POST['bookingToModify']));
+                } ?></p>
       <input type="submit" name="submit" value="Update Booking">
+    </div>
+    <div <?php if (!isset($_POST['bookingToModify']) || $_POST['bookingToModify'] == '' || $_POST['submit'] == 'Modify Booking') { ?> hidden <?php } ?>>
+      <h5>Are you sure you want to delete this booking? <em>This is permanent</em></h5>
+      <input type="submit" name="submit" value="Cancel">
+      <input type="submit" name="submit" value="Yes, permanently delete this booking">
     </div>
   </div>
   <hr>
-  <h2>Edit blacklist</h2>
+  <h2>Add to blacklist</h2>
+  <?= echoErrors($blacklistErrors) ?>
+  <p>First name: <?= echoTextField('addToBlacklistFirstName', 'first name') ?></p>
+  <p>Last name: <?= echoTextField('addToBlacklistLastName', 'last name') ?></p>
+  <input type="submit" name="submit" value="Blacklist">
+  <hr>
+  <h2>Remove from blacklist</h2>
 </form>
 
 
-<?php require('misc/footer.php'); ?>
+<?php
+
+// if (!isset($_POST['bookingToModify']) || $_POST['bookingToModify'] == '' || $_POST['submit'] == 'Modify Booking') { 
+//  hidden
+//  }
+
+require('misc/footer.php');
+?>
