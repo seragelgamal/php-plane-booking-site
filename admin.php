@@ -3,7 +3,7 @@
 require('misc/header.php');
 
 // error arrays
-$addTripErrors = $modifyTripErrors = $deleteTripErrors = $modifyBookingsErrors = $blacklistErrors = [];
+$addTripErrors = $modifyTripErrors = $deleteTripErrors = $modifyBookingsErrors = $addToBlacklistErrors = $removeFromBlacklistErrors = [];
 
 // global variables for trip modification section
 // $modifyTripOrigin = $modifyTripDestination = $modifyTripPrice = $modifyTripDate = $modifyTripTime = $modifyTripNumberOfRows = $modifyTripNumberOfColumns = '';
@@ -20,6 +20,13 @@ $routes = $stmt->fetchAll();
 // get all available trips for the modify trip section
 $stmt = $pdo->query("SELECT * FROM flights");
 $trips = $stmt->fetchAll();
+
+// get all blacklisted people
+$stmt = $pdo->query("SELECT * FROM blacklist");
+$blacklistedPeople = $stmt->fetchAll();
+
+$hideRemoveBlacklistConfirmation = true;
+
 // sort alphabetically by origin to make trips easier to browse
 // $originsOfTrips = [];
 // foreach ($trips as $trip) {
@@ -267,8 +274,41 @@ if (isset($_POST['submit'])) {
       $_POST['modifyBookingSeatColumn'] = $column;
     }
   } else if ($_POST['submit'] == 'Blacklist') {
-    pushErrorIfBlank($_POST['addToBlacklistFirstName'], $modifyBookingsErrors, 'First name');
-    pushErrorIfBlank($_POST['modifyBookingLastName'], $modifyBookingsErrors, 'Last name');
+    pushErrorIfBlank($_POST['addToBlacklistFirstName'], $addToBlacklistErrors, 'First name');
+    pushErrorIfBlank($_POST['addToBlacklistLastName'], $addToBlacklistErrors, 'Last name');
+
+    $firstName = $_POST['addToBlacklistFirstName'];
+    $lastName = $_POST['addToBlacklistLastName'];
+
+    $addToBlacklistErrors = array_merge($addToBlacklistErrors, nameErrorArray($firstName, 'First name'), nameErrorArray($lastName, 'Last name'));
+
+    if (sizeof($addToBlacklistErrors) == 0) {
+      $firstName = formatNameOriginDestination($firstName);
+      $lastName = formatNameOriginDestination($lastName);
+
+      $stmt = $pdo->prepare("SELECT * FROM blacklist WHERE first_name = :firstName && last_name = :lastName");
+      $stmt->execute(['firstName' => $firstName, 'lastName' => $lastName]);
+
+      if ($stmt->rowCount() == 0) {
+        $stmt = $pdo->prepare("INSERT INTO blacklist (first_name, last_name) VALUES (:firstName, :lastName)");
+        $stmt->execute(['firstName' => $firstName, 'lastName' => $lastName]);
+
+        $feedbackMessage = $feedbackMessage . 'Successfully added to blacklist<br>';
+
+        $_POST = [];
+      } else {
+        array_push($addToBlacklistErrors, 'This person is already blacklisted');
+      }
+    }
+  } else if ($_POST['submit'] == 'Remove From Blacklist') {
+    if (!pushErrorIfBlank($_POST['blacklistedPersonToRemove'], $removeFromBlacklistErrors, 'Person selection')) {
+      $hideRemoveBlacklistConfirmation = false;
+    }
+  } else if ($_POST['submit'] == 'Yes, remove this person from the blacklist') {
+    $stmt = $pdo->prepare("DELETE FROM blacklist WHERE id = :id");
+    $stmt->execute(['id' => $_POST['blacklistedPersonToRemove']]);
+
+    $feedbackMessage = $feedbackMessage . 'Successfully removed person from blacklist<br>';
   }
 }
 
@@ -388,12 +428,27 @@ function checkPOSTvalue(string $POSTfieldName, mixed $value) {
   </div>
   <hr>
   <h2>Add to blacklist</h2>
-  <?= echoErrors($blacklistErrors) ?>
-  <p>First name: <?= echoTextField('addToBlacklistFirstName', 'first name') ?></p>
-  <p>Last name: <?= echoTextField('addToBlacklistLastName', 'last name') ?></p>
+  <h3>Blacklisted people will be blocked from booking flights</h3>
+  <?= echoErrors($addToBlacklistErrors) ?>
+  <p>First name: <?= echoTextField('addToBlacklistFirstName', 'First name') ?></p>
+  <p>Last name: <?= echoTextField('addToBlacklistLastName', 'Last name') ?></p>
   <input type="submit" name="submit" value="Blacklist">
   <hr>
   <h2>Remove from blacklist</h2>
+  <?= echoErrors($removeFromBlacklistErrors) ?>
+  <h3>Select a person:</h3>
+  <select name="blacklistedPersonToRemove">
+    <option value="">Select a person to remove them from the blacklist...</option>
+    <?php foreach ($blacklistedPeople as $blacklistedPerson) { ?>
+      <option value="<?= $blacklistedPerson->id ?>" <?= checkPOSTvalue('blacklistedPersonToRemove', $blacklistedPerson->id) ?>><?= "$blacklistedPerson->first_name $blacklistedPerson->last_name" ?></option>
+    <?php } ?>
+  </select>
+  <input type="submit" name="submit" value="Remove From Blacklist">
+  <div <?php if ($hideRemoveBlacklistConfirmation) { ?> hidden <?php } ?>>
+    <h4>Are you sure you want to remove this person from the blacklist? They will regain the ability to book flights</h4>
+    <input type="submit" name="submit" value="Cancel">
+    <input type="submit" name="submit" value="Yes, remove this person from the blacklist">
+  </div>
 </form>
 
 

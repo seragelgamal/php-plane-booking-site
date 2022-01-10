@@ -13,7 +13,7 @@ if ($stmt->rowCount() == 0) {
 
 // set global form and seat info variables and error arrays
 $seat = $row = $column = $firstName = $lastName = $availabilityInfo = '';
-$seatErrors = $firstNameErrors = $lastNameErrors = [];
+$seatErrors = $firstNameErrors = $lastNameErrors = $blacklistErrors = [];
 
 // form action
 if (isset($_POST['bookButton'])) {
@@ -44,16 +44,24 @@ if (isset($_POST['bookButton'])) {
     $firstName = formatNameOriginDestination($firstName);
     $lastName = formatNameOriginDestination($lastName);
 
-    // push name and seat to server
-    $stmt = $pdo->prepare('INSERT INTO flight_bookings (first_name, last_name, flight_id, seat_row, seat_column) VALUES (:firstName, :lastName, :flightId, :seatRow, :seatColumn)');
-    $stmt->execute(['firstName' => $firstName, 'lastName' => $lastName, 'flightId' => $_GET['flightId'], 'seatRow' => $row, 'seatColumn' => $column]);
+    // check if the person is in the blacklist
+    $stmt = $pdo->prepare("SELECT * FROM blacklist WHERE first_name = :firstName && last_name = :lastName");
+    $stmt->execute(['firstName' => $firstName, 'lastName' => $lastName]);
 
-    // update seats booked in database
-    $stmt = $pdo->prepare('UPDATE flights SET seats_booked = seats_booked + 1 WHERE id = :flightId');
-    $stmt->execute(['flightId' => $_GET['flightId']]);
+    if ($stmt->rowCount() == 0) {
+      // push name and seat to server
+      $stmt = $pdo->prepare('INSERT INTO flight_bookings (first_name, last_name, flight_id, seat_row, seat_column) VALUES (:firstName, :lastName, :flightId, :seatRow, :seatColumn)');
+      $stmt->execute(['firstName' => $firstName, 'lastName' => $lastName, 'flightId' => $_GET['flightId'], 'seatRow' => $row, 'seatColumn' => $column]);
 
-    // redirect to thank-you page
-    header('Location: thanks.php');
+      // update seats booked in database
+      $stmt = $pdo->prepare('UPDATE flights SET seats_booked = seats_booked + 1 WHERE id = :flightId');
+      $stmt->execute(['flightId' => $_GET['flightId']]);
+
+      // redirect to thank-you page
+      header('Location: thanks.php');
+    } else {
+      array_push($blacklistErrors, 'You have been blacklisted by the airline and are therefore not allowed to book flights. If you believe this is an error, please contact customer service');
+    }
   }
 }
 
@@ -86,6 +94,7 @@ $seats = array_diff($seats, $seatsBooked);
 
 <!-- seat selector: -->
 <div class="seatSelection">
+  <?= echoErrors($blacklistErrors) ?>
   <p class="seatSelection">Select a seat from the following availablities:</p>
   <?php echoErrors($seatErrors); ?>
   <form action="<?= htmlspecialchars("{$_SERVER['PHP_SELF']}?flightId={$_GET['flightId']}") ?>" method="post">
