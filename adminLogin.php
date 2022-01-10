@@ -1,7 +1,12 @@
 <?php
 
+session_start();
+session_unset();
+
 // Require header template
 require('misc/header.php');
+
+var_dump($_SESSION);
 
 $loginErrors = $usernameErrors = $pwdErrors = [];
 
@@ -23,12 +28,17 @@ if (isset($_POST['logIn'])) {
     if ($stmt->rowCount() == 0) {
       // if login fails, notify the user
       array_push($loginErrors, 'Unknown username or incorrect password');
+      session_destroy();
     } else {
-      // if login is successful: take user to admin page
+      // if login is successful:
+      $_SESSION['username'] = $username;
+      $_SESSION['pwd'] = $pwd;
       header('Location: admin.php');
     }
   }
 }
+
+
 ?>
 
 <h2>Admin Login</h2>

@@ -1,5 +1,11 @@
 <?php
 
+session_start();
+
+if (sizeof($_SESSION) == 0) {
+  header('Location: adminLogin.php');
+}
+
 require('misc/header.php');
 
 // error arrays
@@ -43,6 +49,8 @@ $hideRemoveBlacklistConfirmation = true;
 // // }
 // // var_dump($originsOfTrips);
 // // sortElementsByProperty($trips, 'origin');
+
+// make sure 
 
 // form action
 if (isset($_POST['submit'])) {
@@ -309,6 +317,10 @@ if (isset($_POST['submit'])) {
     $stmt->execute(['id' => $_POST['blacklistedPersonToRemove']]);
 
     $feedbackMessage = $feedbackMessage . 'Successfully removed person from blacklist<br>';
+  } else if ($_POST['submit'] == 'Log out') {
+    session_unset();
+    session_destroy();
+    header('Location: adminLogin.php');
   }
 }
 
@@ -331,6 +343,9 @@ function checkPOSTvalue(string $POSTfieldName, mixed $value) {
 
 ?>
 
+<p>Logged in as '<b><?= $_SESSION['username'] ?></b>'</p>
+<p>For security reasons, please ensure to log out of your admin account before leaving this page using the 'Log out' button at the bottom</p>
+<hr>
 <h2 style="color: blue;"><?= $feedbackMessage ?></h2>
 <form method="POST" action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>">
   <h2>Add a trip</h2>
@@ -449,8 +464,10 @@ function checkPOSTvalue(string $POSTfieldName, mixed $value) {
     <input type="submit" name="submit" value="Cancel">
     <input type="submit" name="submit" value="Yes, remove this person from the blacklist">
   </div>
+  <hr>
+  <p>Logged in as '<b><?= $_SESSION['username'] ?></b>'</p>
+  <input type="submit" name="submit" value="Log out">
 </form>
-
 
 <?php
 
