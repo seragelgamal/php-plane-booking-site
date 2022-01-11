@@ -6,7 +6,17 @@ session_unset();
 // Require header template
 require('misc/header.php');
 
-var_dump($_SESSION);
+// FUNCTIONS:
+// return an array of all the errors found for an admin-entered password
+function pwdErrorArray(string $pwdVariable) {
+  $errorArray = [];
+  if (!pushErrorIfBlank($pwdVariable, $errorArray, 'Password')) {
+    if ($pwdVariable[0] == ' ' || $pwdVariable[strlen($pwdVariable) - 1] == ' ') {
+      array_push($errorArray, "Password can't start or end with a space");
+    }
+  }
+  return $errorArray;
+}
 
 $loginErrors = $usernameErrors = $pwdErrors = [];
 
