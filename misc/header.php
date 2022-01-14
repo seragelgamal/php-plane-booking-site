@@ -1,8 +1,6 @@
 <?php
 
-// FUNCTIONS:
-
-// multi-use functions:
+// MULTI-USE FUNCTIONS:
 // pushes appropriate error if something is blank
 function pushErrorIfBlank(mixed $input, array &$errorArray, string $fieldName) {
   if ($input == '') {
@@ -11,10 +9,6 @@ function pushErrorIfBlank(mixed $input, array &$errorArray, string $fieldName) {
   }
   return false;
 }
-// echoes a text field with the given POST field name and placeholder
-function echoTextField(string $POSTfieldName, string $placeholder = '') { ?>
-  <input type="text" name="<?= $POSTfieldName ?>" placeholder="<?= $placeholder ?>" <?php if (isset($_POST[$POSTfieldName])) { ?> value="<?= $_POST[$POSTfieldName] ?>" <?php } ?>>
-  <?php }
 // returns the properly-formatted version of a user-entered name
 function formatNameOriginDestination(string $nameVariable) {
   // take out spaces from the start and end of the name if they exist
@@ -25,23 +19,7 @@ function formatNameOriginDestination(string $nameVariable) {
   $nameVariable = ucwords($nameVariable);
   return $nameVariable;
 }
-// sorts an array of similar objects by a given property
-function sortElementsByProperty(array &$array, string $property) {
-  $arrayOfProperties = [];
-  foreach ($array as $element) {
-    array_push($arrayOfProperties, $element->$property);
-  }
-  insertionSort($arrayOfProperties);
-  $copyOfArray = $array;
-  $array = [];
-  foreach ($arrayOfProperties as $elementProperty) {
-    foreach ($copyOfArray as $element) {
-      if ($element->$property == $elementProperty && !in_array($element, $array)) {
-        array_push($array, $element);
-      }
-    }
-  }
-}
+// 
 function echoSeatSelector(object $flight, array $bookings, string $POSTfieldName, mixed $row, string $column, bool $flightBookingPage = true, object $bookingToModify = NULL) {
   // set global array '$seats' to store all possible seats
   $columnLegend = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K'];
@@ -80,48 +58,12 @@ function echoSeatSelector(object $flight, array $bookings, string $POSTfieldName
     </div>
   <?php }
 }
-
-// document-specific functions:
-// index.php:
-// import sort algorithm library
-require('sortAlgorithms.php');
-// origin/destination filter function: pushes values from array of all routes that match with the specified location filter (either 'origin' or 'destination')
-function originDestinationFilter(array $totalRouteArray, string $filterLocation, string $formValue, array &$filteredRouteArray) {
-  foreach ($totalRouteArray as $route) {
-    if ($route->$filterLocation == $formValue) {
-      array_push($filteredRouteArray, $route);
-    }
-  }
-}
-// price filter function: takes value with specified index out of the specified array and re-keys the array
-function priceFilter(array &$array, int $i) {
-  unset($array[$i]);
-  $array = array_values($array);
-}
 // echoes a price input field with the specified POST field name to input minimum and maximum price
 function echoPriceField(string $POSTfieldName, string $placeholder = '') { ?>
   $<input type="number" name=<?= $POSTfieldName ?> min="0" placeholder="<?= $placeholder ?>" <?php if (isset($_POST[$POSTfieldName])) { ?> value="<?= $_POST[$POSTfieldName] ?>" <?php } ?>>
 <?php }
-// echoes an origin/destination filter with the specified POST field name to input origin/destination filters
-function echoOriginDestinationDropdown(string $POSTfieldName, array $totalRouteArray) { ?>
-  <select name=<?= $POSTfieldName ?>>
-    <option value="">All <?= $POSTfieldName ?>s</option>
-    <?php $originDestinationArray = [];
-    foreach ($totalRouteArray as $route) {
-      if (!in_array($route->$POSTfieldName, $originDestinationArray)) {
-        array_push($originDestinationArray, $route->$POSTfieldName); ?>
-        <option <?php if (isset($_POST[$POSTfieldName]) && $_POST[$POSTfieldName] == $route->$POSTfieldName) { ?> selected <?php } ?>><?= $route->$POSTfieldName ?></option>
-    <?php }
-    } ?>
-  </select>
-<?php }
 
-// echoes a radio input with a given POST field name, value, and label to choose sort mode
-function echoRadioInput(string $POSTfieldName, string $value, string $label) { ?>
-  <input type="radio" name="<?= $POSTfieldName ?>" value="<?= $value ?>" <?php if ($_POST[$POSTfieldName] == $value) { ?> checked <?php } ?>>
-<?php echo ($label);
-}
-
+// document-specific functions:
 // bookFlight.php:
 // returns an array of the errors for a user-entered name
 function nameErrorArray(string $nameVariable, string $fieldName) {
@@ -143,8 +85,6 @@ function echoNameField(string $userFieldName, string $POSTfieldName, array $erro
   <p><?= $userFieldName ?>: <input type="text" name="<?= $POSTfieldName ?>" <?php if (isset($_POST[$POSTfieldName])) { ?> value="<?= $_POST[$POSTfieldName] ?>" <?php } ?>></p>
 <?php echoErrors($errorArray);
 }
-
-// adminLogin.php
 // return an array of all the errors found for an admin-entered username
 function usernameErrorArray(string $usernameVariable) {
   $errorArray = [];
@@ -156,18 +96,6 @@ function usernameErrorArray(string $usernameVariable) {
   }
   return $errorArray;
 }
-// return an array of all the errors found for an admin-entered password
-function pwdErrorArray(string $pwdVariable) {
-  $errorArray = [];
-  if (!pushErrorIfBlank($pwdVariable, $errorArray, 'Password')) {
-    if ($pwdVariable[0] == ' ' || $pwdVariable[strlen($pwdVariable) - 1] == ' ') {
-      array_push($errorArray, "Password can't start or end with a space");
-    }
-  }
-  return $errorArray;
-}
-
-// admin.php
 // returns an error of the arrays for an admin-entered origin/destination name
 function originDestinationErrorArray(string $originDestinationVariable, string $fieldName) {
   $errorArray = [];
@@ -178,24 +106,6 @@ function originDestinationErrorArray(string $originDestinationVariable, string $
     array_push($errorArray, "$fieldName can only be a maximum of 255 characters long");
   }
   return $errorArray;
-}
-// echoes a date input field with the given POST field name
-function echoDateField(string $POSTfieldName) { ?>
-  Date: <input type="date" name="<?= $POSTfieldName ?>" <?php if (isset($_POST[$POSTfieldName])) { ?> value="<?= $_POST[$POSTfieldName] ?>" <?php } ?>>
-<?php }
-// echoes a time input field with the given POST field name
-function echoTimeField(string $POSTfieldName) { ?>
-  Time: <input type="time" name="<?= $POSTfieldName ?>" <?php if (isset($_POST[$POSTfieldName])) { ?> value="<?= $_POST[$POSTfieldName] ?>" <?php } ?>>
-<?php }
-// echoes a row/column number input field
-function echoRowColumnNumberField(string $POSTfieldName, string $placeholder, int $max) { ?>
-  <input type="number" name="<?= $POSTfieldName ?>" placeholder="<?= $placeholder ?>" min='1' max='<?= $max ?>' <?php if (isset($_POST[$POSTfieldName])) { ?> value="<?= $_POST[$POSTfieldName] ?>" <?php } ?>>
-<?php }
-// returns the route with the specified origin, destination, and price from the specified table in a database
-function getRouteFromDatabase(PDO $pdoObject, string $routeTableName, string $origin, string $destination, string $price) {
-  $stmt = $pdoObject->prepare("SELECT * FROM $routeTableName WHERE origin=:origin && destination=:destination && price=:price");
-  $stmt->execute(['origin' => $origin, 'destination' => $destination, 'price' => $price]);
-  return $stmt->fetch(); // returns false if no such route exists
 }
 
 // establish mySQL connection via PDO

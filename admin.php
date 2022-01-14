@@ -33,24 +33,44 @@ $blacklistedPeople = $stmt->fetchAll();
 
 $hideRemoveBlacklistConfirmation = true;
 
-// sort alphabetically by origin to make trips easier to browse
-// $originsOfTrips = [];
-// foreach ($trips as $trip) {
-//   $route = searchArrayOfObjects($routes, 'id', $trip->route_id);
-//   array_push($originsOfTrips, [$route->id, $route->origin]);
-// }
-// insertionSort($originsOfTrips);
-// // now have a sorted array of the origins of all the trips
-// $copyOfTrips = $trips;
-// $trips = [];
-// // foreach ($copyOfTrips as $trip) {
-// //   foreach ()
-// //   array_push($trips, searchArrayOfObjects($copyOfTrips, 'route_id', searchArrayOfObjects($routes, 'origin', $trip[1])));
-// // }
-// // var_dump($originsOfTrips);
-// // sortElementsByProperty($trips, 'origin');
-
-// make sure 
+// FUNCTIONS
+// returns the object from an array of similar objects whose specified property is a given value
+function searchArrayOfObjects(array $arrayOfObjects, string $property, mixed $value) {
+  foreach ($arrayOfObjects as $object) {
+    if ($object->$property === $value) {
+      return $object;
+    }
+  }
+  return false;
+}
+// to be used inside the brackets of an input element: echoes 'selected' if the POST value matches the value of the inputted element
+function checkPOSTvalue(string $POSTfieldName, mixed $value) {
+  if (isset($_POST[$POSTfieldName]) && $_POST[$POSTfieldName] == $value) {
+    return 'selected';
+  }
+}
+// echoes a text field with the given POST field name and placeholder
+function echoTextField(string $POSTfieldName, string $placeholder = '') { ?>
+  <input type="text" name="<?= $POSTfieldName ?>" placeholder="<?= $placeholder ?>" <?php if (isset($_POST[$POSTfieldName])) { ?> value="<?= $_POST[$POSTfieldName] ?>" <?php } ?>>
+<?php }
+// echoes a date input field with the given POST field name
+function echoDateField(string $POSTfieldName) { ?>
+  Date: <input type="date" name="<?= $POSTfieldName ?>" <?php if (isset($_POST[$POSTfieldName])) { ?> value="<?= $_POST[$POSTfieldName] ?>" <?php } ?>>
+<?php }
+// echoes a time input field with the given POST field name
+function echoTimeField(string $POSTfieldName) { ?>
+  Time: <input type="time" name="<?= $POSTfieldName ?>" <?php if (isset($_POST[$POSTfieldName])) { ?> value="<?= $_POST[$POSTfieldName] ?>" <?php } ?>>
+<?php }
+// echoes a row/column number input field
+function echoRowColumnNumberField(string $POSTfieldName, string $placeholder, int $max) { ?>
+  <input type="number" name="<?= $POSTfieldName ?>" placeholder="<?= $placeholder ?>" min='1' max='<?= $max ?>' <?php if (isset($_POST[$POSTfieldName])) { ?> value="<?= $_POST[$POSTfieldName] ?>" <?php } ?>>
+<?php }
+// returns the route with the specified origin, destination, and price from the specified table in a database
+function getRouteFromDatabase(PDO $pdoObject, string $routeTableName, string $origin, string $destination, string $price) {
+  $stmt = $pdoObject->prepare("SELECT * FROM $routeTableName WHERE origin=:origin && destination=:destination && price=:price");
+  $stmt->execute(['origin' => $origin, 'destination' => $destination, 'price' => $price]);
+  return $stmt->fetch(); // returns false if no such route exists
+}
 
 // form action
 if (isset($_POST['submit'])) {
@@ -321,23 +341,6 @@ if (isset($_POST['submit'])) {
     session_unset();
     session_destroy();
     header('Location: adminLogin.php');
-  }
-}
-
-// returns the object from an array of similar objects whose specified property is a given value
-function searchArrayOfObjects(array $arrayOfObjects, string $property, mixed $value) {
-  foreach ($arrayOfObjects as $object) {
-    if ($object->$property === $value) {
-      return $object;
-    }
-  }
-  return false;
-}
-
-// to be used inside the brackets of an input element: echoes 'selected' if the POST value matches the value of the inputted element
-function checkPOSTvalue(string $POSTfieldName, mixed $value) {
-  if (isset($_POST[$POSTfieldName]) && $_POST[$POSTfieldName] == $value) {
-    return 'selected';
   }
 }
 
